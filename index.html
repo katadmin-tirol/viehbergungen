@@ -162,17 +162,12 @@ document.getElementById("exportPDF").onclick = async () => {
   const mapEl = document.getElementById('map');
   const originalHeight = mapEl.style.height;
 
-  // Zoom-Controls, Suchleiste, Layer-Switch vorübergehend ausblenden
-  const zoomControls = document.querySelector('.leaflet-control-zoom');
-  const geocoderEl = document.querySelector('.leaflet-control-geocoder');
-  if(zoomControls) zoomControls.style.display = 'none';
-  if(geocoderEl) geocoderEl.style.display = 'none';
-
   // PDF-Seitenmaße
   const pdfWidth = pdf.internal.pageSize.getWidth() - 20;   // 10mm Rand links/rechts
   const pdfHeight = pdf.internal.pageSize.getHeight() - 50; // Platz für Text unten
 
   // Karte temporär anpassen, proportional zur PDF-Breite
+  // devicePixelRatio sorgt für hohe Auflösung auf mobilen Displays
   mapEl.style.height = (pdfHeight * window.devicePixelRatio) + 'px';
   map.invalidateSize();
 
@@ -209,12 +204,7 @@ document.getElementById("exportPDF").onclick = async () => {
   // Originalhöhe der Karte wiederherstellen
   mapEl.style.height = originalHeight;
   map.invalidateSize();
-
-  // Zoom-Controls und Suchleiste wieder anzeigen
-  if(zoomControls) zoomControls.style.display = '';
-  if(geocoderEl) geocoderEl.style.display = '';
 };
-
 
 function resizeMap() {
   const height = window.innerHeight*0.75;
@@ -230,6 +220,4 @@ geocoder.on('markgeocode', e => map.setView(e.geocode.center, 14));
 </script>
 </body>
 </html>
-
-
 
