@@ -53,7 +53,7 @@ html, body {
   <button id="exportJPG">Als JPG exportieren</button>
   <select id="layerSwitch" class="layer-switch">
     <option value="osm">OSM-Karte</option>
-    <option value="ortho">Orthophoto Tirol</option>
+    <option value="topo">Topographische Karte</option>
   </select>
 </div>
 
@@ -64,12 +64,12 @@ html, body {
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <!-- jsPDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<!-- Leaflet EasyPrint -->
-<script src="https://unpkg.com/leaflet-easyprint/dist/bundle.js"></script>
+<!-- html2canvas -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <script>
-  console.log("Test")
-<script>  
+console.log("Test"); // Prüfen ob JS geladen wird
+
 // Karte initialisieren (Fokus Tirol)
 const map = L.map('map', {
   zoomControl: true,
@@ -82,18 +82,29 @@ const map = L.map('map', {
 // Layer definieren
 const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19,
-  attribution: '© OpenStreetMap'
-});
-
-const orthophoto = L.tileLayer.wms("https://maps.tirol.gv.at/ogd/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=orthophoto&STYLES=&SRS=EPSG:4326&FORMAT=image/png&TRANSPARENT=false", {
-  layers: 'orthophoto',
-  format: 'image/png',
-  attribution: '© Land Tirol',
+  attribution: '© OpenStreetMap',
   crossOrigin: true
 });
 
-// Standardlayer
+const topo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+  maxZoom: 17,
+  attribution: '© OpenTopoMap (CC-BY-SA)',
+  crossOrigin: true
+});
+
+// Standardlayer hinzufügen
 osm.addTo(map);
+
+// Layer-Switch
+const baseLayers = {
+  "osm": osm,
+  "topo": topo
+};
+
+document.getElementById("layerSwitch").addEventListener('change', (e) => {
+  Object.values(baseLayers).forEach(layer => map.removeLayer(layer));
+  baseLayers[e.target.value].addTo(map);
+});
 
 // Marker und Punkte
 let points = [];
@@ -127,8 +138,47 @@ document.getElementById("reset").onclick = () => {
   document.getElementById("coords").innerHTML = "";
 };
 
-// Layer wechseln
-document.getElementById("layerSwitch").addEventListener('change', (e) => {
-  map.eachLayer(layer => map.removeLayer
+// PDF Export
+document.getElementById("exportPDF").onclick = async () => {
+  if (points.length < 2) return alert("Bitte zwei Punkte setzen.");
+  const type = document.querySelector('input[name="type"]:checked').value;
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
 
+  html2canvas(map.getContainer(), {useCORS: true}).then(canvas => {
+    const imgData = canvas.toDataURL("image/png");
+    pdf.text(`Fieldmap Tirol - ${type}`, 10, 10);
+    pdf.addImage(imgData, 'PNG', 10, 20, 260, 140);
+    pdf.text(`Aufnahmeort: ${points[0].lat.toFixed(5)}, ${points[0].lng.toFixed(5)}`, 10, 170);
+    pdf.text(`Ablageort:   ${points[1].lat.toFixed(5)}, ${points[1].lng.toFixed(5)}`, 10, 180);
+    const now = new Date();
+    pdf.text(`Datum: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, 10, 190);
+    pdf.save(`fieldmap_Tirol_${type}.pdf`);
+  });
+};
+
+// JPG Export
+document.getElementById("exportJPG").onclick = async () => {
+  if (points.length < 2) return alert("Bitte zwei Punkte setzen.");
+  html2canvas(map.getContainer(), {useCORS: true}).then(canvas => {
+    const link = document.createElement("a");
+    link.download = `fieldmap_Tirol.jpg`;
+    link.href = canvas.toDataURL("image/jpeg", 1.0);
+    link.click();
+  });
+};
+
+// Karte dynamisch an Bildschirmhöhe anpassen
+function resizeMap() {
+  const height = window.innerHeight * 0.8;
+  document.getElementById('map').style.height = height + "px";
+  map.invalidateSize();
+}
+
+window.addEventListener('resize', resizeMap);
+resizeMap();
+
+</script>
+</body>
+</html>
 
