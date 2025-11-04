@@ -152,6 +152,7 @@ document.getElementById("layerSwitch").addEventListener('change', (e) => {
   markers.forEach(m => m.addTo(map));
 });
 
+// PDF-Export
 document.getElementById("exportPDF").onclick = async () => {
   if(points.length < 2) return alert("Bitte zwei Punkte setzen.");
   
@@ -161,36 +162,36 @@ document.getElementById("exportPDF").onclick = async () => {
 
   const mapEl = document.getElementById('map');
   const originalHeight = mapEl.style.height;
+  const originalView = map.getCenter();
+  const originalZoom = map.getZoom();
+
+  // Zoom-Control & Geocoder temporär ausblenden
+  map.zoomControl.remove();
+  if(geocoder && geocoder.getContainer()) geocoder.getContainer().style.display = 'none';
+
+  // Karte auf die gesetzten Punkte anpassen
+  const bounds = L.latLngBounds(points);
+  map.fitBounds(bounds, { padding: [50, 50] });
+  map.invalidateSize();
 
   // PDF-Seitenmaße
-  const pdfWidth = pdf.internal.pageSize.getWidth() - 20;   // 10mm Rand links/rechts
-  const pdfHeight = pdf.internal.pageSize.getHeight() - 50; // Platz für Text unten
+  const pdfWidth = pdf.internal.pageSize.getWidth() - 20;
+  const pdfHeight = pdf.internal.pageSize.getHeight() - 50;
 
-  // Karte temporär anpassen, proportional zur PDF-Breite
-  // devicePixelRatio sorgt für hohe Auflösung auf mobilen Displays
   mapEl.style.height = (pdfHeight * window.devicePixelRatio) + 'px';
   map.invalidateSize();
 
-  // Kurze Wartezeit, bis Leaflet gerendert hat
   await new Promise(r => setTimeout(r, 1000));
 
-  const canvas = await html2canvas(mapEl, {
-    useCORS: true,
-    scale: 2,
-    scrollY: -window.scrollY
-  });
-
+  const canvas = await html2canvas(mapEl, { useCORS: true, scale: 2, scrollY: -window.scrollY });
   const imgData = canvas.toDataURL("image/png");
   const imgHeight = (canvas.height / canvas.width) * pdfWidth;
 
   let yStart = 20;
   pdf.setFontSize(14);
   pdf.text(`Tirol - Viehbergung: ${type}`, 10, yStart);
-  
-  // Karte einfügen
   pdf.addImage(imgData, 'PNG', 10, yStart + 5, pdfWidth, imgHeight);
 
-  // Koordinaten und Datum unterhalb der Karte
   const yText = yStart + imgHeight + 10;
   pdf.setFontSize(11);
   pdf.setTextColor(0, 0, 0);
@@ -201,11 +202,15 @@ document.getElementById("exportPDF").onclick = async () => {
 
   pdf.save(`fieldmap_Tirol_${type}.pdf`);
 
-  // Originalhöhe der Karte wiederherstellen
+  // Originalhöhe und Controls wiederherstellen
   mapEl.style.height = originalHeight;
   map.invalidateSize();
+  map.setView(originalView, originalZoom);
+  map.addControl(L.control.zoom());
+  if(geocoder && geocoder.getContainer()) geocoder.getContainer().style.display = '';
 };
 
+// Karte an Fenstergröße anpassen
 function resizeMap() {
   const height = window.innerHeight*0.75;
   document.getElementById('map').style.height = height+'px';
@@ -214,10 +219,9 @@ function resizeMap() {
 window.addEventListener('resize', resizeMap);
 resizeMap();
 
-// Ortssuche links offen, ohne Marker
+// Ortssuche
 const geocoder = L.Control.geocoder({defaultMarkGeocode:false, collapsed:false}).addTo(map);
 geocoder.on('markgeocode', e => map.setView(e.geocode.center, 14));
 </script>
 </body>
 </html>
-
