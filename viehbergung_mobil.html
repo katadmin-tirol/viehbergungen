@@ -2,55 +2,58 @@
 <html lang="de">
 <head>
 <meta charset="utf-8" />
-<title>Fieldmap Tirol - Viehbergung</title>
+<title>Tirol - Viehbergung</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <!-- Leaflet CSS -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
 
 <style>
 html, body {
   height: 100%;
   margin: 0;
   padding: 0;
-  font-family: 'Akagi Pro', sans-serif; /* Schriftart */
+  font-family: 'Arial', sans-serif;
 }
 
-#map {
-  height: 80vh;
-  width: 100%;
-  touch-action: none;
-}
+#map { height: 80vh; width: 100%; touch-action: none; }
 
 .controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin: 10px;
+  display: flex; flex-wrap: wrap; gap: 10px; margin: 10px;
 }
 
 .controls button, .controls label, .layer-switch {
-  font-size: 1.2em;
-  padding: 8px 12px;
-  cursor: pointer;
+  font-size: 1.2em; padding: 8px 12px; cursor: pointer;
 }
 
-#coords {
-  margin: 10px;
-  font-size: 1em;
-}
+#coords { margin: 10px; font-size: 1em; }
+
+#instruction { background-color:#f0f0f0; padding:10px; margin:10px 0; border-radius:5px; }
+
+/* Tooltip-Farben */
+.leaflet-tooltip-aufnahmeort { color: blue; font-weight: bold; }
+.leaflet-tooltip-ablageort { color: red; font-weight: bold; }
 </style>
 </head>
 <body>
 
-<h3>Fieldmap Tirol - Tierbergung</h3>
+<h3>Tirol - Viehbergung</h3>
+
+<div id="instruction">
+  <strong>Anleitung:</strong><br>
+  1. Navigieren sie zum passenden Kartenausschnitt und nutzen Sie ggfls. die Suchleiste.<br>
+  2. Wählen Sie aus, ob es sich um eine Lebendvieh- oder Kadaverbergung handelt.<br>
+  3. Klicken Sie auf die Karte, um zuerst den Aufnahmeort und anschließend den Ablageort zu markieren (max. 2 Punkte). Falls Sie falsche Punkte ausgewählt haben, klicken Sie auf "Zurücksetzen" und setzen Sie die Punkte dann erneut.<br>
+  4. Optional: Wechseln Sie die Hintergrundkarte über die Auswahlbox.<br>
+  5. Klicken Sie auf "Als PDF exportieren", um die Karte zu speichern.<br>
+</div>
 
 <div class="controls">
   <label><input type="radio" name="type" value="Lebendvieh" checked> Lebendviehbergung</label>
   <label><input type="radio" name="type" value="Kadaver"> Kadaverbergung</label>
   <button id="reset">Zurücksetzen</button>
   <button id="exportPDF">Als PDF exportieren</button>
-  <button id="exportJPG">Als JPG exportieren</button>
   <select id="layerSwitch" class="layer-switch">
     <option value="osm">OSM-Karte</option>
     <option value="topo">Topographische Karte</option>
@@ -60,77 +63,58 @@ html, body {
 <div id="map"></div>
 <p id="coords"></p>
 
-<!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<!-- jsPDF -->
+<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<!-- html2canvas -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <script>
-console.log("Test"); // Prüfen ob JS geladen wird
-
-// Karte initialisieren (Fokus Tirol)
-const map = L.map('map', {
-  zoomControl: true,
-  dragging: true,
-  tap: true,
-  touchZoom: true,
-  doubleClickZoom: false
-}).setView([47.26, 11.40], 9);
+// Karte initialisieren
+const map = L.map('map', { zoomControl: true, dragging: true, tap: true, touchZoom: true, doubleClickZoom: false }).setView([47.26, 11.40], 9);
 
 // Layer definieren
-const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  maxZoom: 19,
-  attribution: '© OpenStreetMap',
-  crossOrigin: true
-});
-
-const topo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-  maxZoom: 17,
-  attribution: '© OpenTopoMap (CC-BY-SA)',
-  crossOrigin: true
-});
-
-// Standardlayer hinzufügen
+const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' });
+const topo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { maxZoom: 17, attribution: '© OpenTopoMap, OpenStreetMap' });
 osm.addTo(map);
 
-// Layer-Switch
-const baseLayers = {
-  "osm": osm,
-  "topo": topo
-};
-
-document.getElementById("layerSwitch").addEventListener('change', (e) => {
-  Object.values(baseLayers).forEach(layer => map.removeLayer(layer));
-  baseLayers[e.target.value].addTo(map);
+// Marker-Icons definieren
+const blueIcon = new L.Icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png',
+    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+    iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+});
+const redIcon = new L.Icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+    iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
 });
 
 // Marker und Punkte
-let points = [];
-let markers = [];
+let points = [], markers = [];
 
 // Karte klicken → Marker setzen
 map.on('click', function(e) {
   if (points.length >= 2) return alert("Nur zwei Punkte erlaubt (Aufnahme & Ablage).");
 
   const label = points.length === 0 ? "Aufnahmeort" : "Ablageort";
-  const marker = L.marker(e.latlng).addTo(map).bindPopup(label).openPopup();
+  const icon = points.length === 0 ? blueIcon : redIcon;
+  const className = points.length === 0 ? 'leaflet-tooltip-aufnahmeort' : 'leaflet-tooltip-ablageort';
+
+  const marker = L.marker(e.latlng, { icon: icon }).addTo(map);
+  marker.bindTooltip(label, {permanent: true, direction: "top", offset: [0, -10], className: className}).openTooltip();
+
   markers.push(marker);
   points.push(e.latlng);
-
   updateCoords();
 });
 
-// Koordinaten anzeigen
 function updateCoords() {
   let text = "";
-  if (points[0]) text += `📍 Aufnahmeort: ${points[0].lat.toFixed(5)}, ${points[0].lng.toFixed(5)}<br>`;
-  if (points[1]) text += `📍 Ablageort: ${points[1].lat.toFixed(5)}, ${points[1].lng.toFixed(5)}`;
+  if(points[0]) text += `📍 Aufnahmeort: ${points[0].lat.toFixed(5)}, ${points[0].lng.toFixed(5)}<br>`;
+  if(points[1]) text += `📍 Ablageort: ${points[1].lat.toFixed(5)}, ${points[1].lng.toFixed(5)}`;
   document.getElementById("coords").innerHTML = text;
 }
 
-// Zurücksetzen
 document.getElementById("reset").onclick = () => {
   points = [];
   markers.forEach(m => map.removeLayer(m));
@@ -138,47 +122,50 @@ document.getElementById("reset").onclick = () => {
   document.getElementById("coords").innerHTML = "";
 };
 
+document.getElementById("layerSwitch").addEventListener('change', (e) => {
+  const value = e.target.value;
+  map.eachLayer(layer => map.removeLayer(layer));
+  if(value==='osm') osm.addTo(map);
+  if(value==='topo') topo.addTo(map);
+  markers.forEach(m => m.addTo(map));
+});
+
 // PDF Export
-document.getElementById("exportPDF").onclick = async () => {
-  if (points.length < 2) return alert("Bitte zwei Punkte setzen.");
+document.getElementById("exportPDF").onclick = () => {
+  if(points.length<2) return alert("Bitte zwei Punkte setzen.");
   const type = document.querySelector('input[name="type"]:checked').value;
   const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+  const pdf = new jsPDF({ orientation:'landscape', unit:'mm', format:'a4' });
 
-  html2canvas(map.getContainer(), {useCORS: true}).then(canvas => {
+  html2canvas(map.getContainer(), {useCORS:true}).then(canvas => {
     const imgData = canvas.toDataURL("image/png");
-    pdf.text(`Fieldmap Tirol - ${type}`, 10, 10);
-    pdf.addImage(imgData, 'PNG', 10, 20, 260, 140);
-    pdf.text(`Aufnahmeort: ${points[0].lat.toFixed(5)}, ${points[0].lng.toFixed(5)}`, 10, 170);
-    pdf.text(`Ablageort:   ${points[1].lat.toFixed(5)}, ${points[1].lng.toFixed(5)}`, 10, 180);
+    const pdfWidth = pdf.internal.pageSize.getWidth() - 20;
+    const pdfHeight = (canvas.height/canvas.width) * pdfWidth;
+
+    pdf.text(`Tirol - Viehbergung: ${type}`, 10, 10);
+    pdf.addImage(imgData, 'PNG', 10, 20, pdfWidth, pdfHeight);
+
+    pdf.setTextColor(0,0,0);
+    pdf.text(`Aufnahmeort: ${points[0].lat.toFixed(5)}, ${points[0].lng.toFixed(5)}`, 10, 20 + pdfHeight + 10);
+    pdf.text(`Ablageort:   ${points[1].lat.toFixed(5)}, ${points[1].lng.toFixed(5)}`, 10, 20 + pdfHeight + 20);
+
     const now = new Date();
-    pdf.text(`Datum: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, 10, 190);
+    pdf.text(`Datum: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, 10, 20 + pdfHeight + 30);
+
     pdf.save(`fieldmap_Tirol_${type}.pdf`);
   });
 };
 
-// JPG Export
-document.getElementById("exportJPG").onclick = async () => {
-  if (points.length < 2) return alert("Bitte zwei Punkte setzen.");
-  html2canvas(map.getContainer(), {useCORS: true}).then(canvas => {
-    const link = document.createElement("a");
-    link.download = `fieldmap_Tirol.jpg`;
-    link.href = canvas.toDataURL("image/jpeg", 1.0);
-    link.click();
-  });
-};
-
-// Karte dynamisch an Bildschirmhöhe anpassen
 function resizeMap() {
-  const height = window.innerHeight * 0.8;
-  document.getElementById('map').style.height = height + "px";
+  const height = window.innerHeight*0.8;
+  document.getElementById('map').style.height = height+'px';
   map.invalidateSize();
 }
-
 window.addEventListener('resize', resizeMap);
 resizeMap();
 
+const geocoder = L.Control.geocoder({defaultMarkGeocode:false, collapsed:false}).addTo(map);
+geocoder.on('markgeocode', e => map.setView(e.geocode.center, 14));
 </script>
 </body>
 </html>
-
