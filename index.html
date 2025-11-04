@@ -152,41 +152,59 @@ document.getElementById("layerSwitch").addEventListener('change', (e) => {
   markers.forEach(m => m.addTo(map));
 });
 
-// 📱 PDF Export – Handy-kompatibel
+// 📱 PDF Export – Handy-kompatibel + kein Abschneiden
 document.getElementById("exportPDF").onclick = async () => {
-  if(points.length<2) return alert("Bitte zwei Punkte setzen.");
+  if (points.length < 2) return alert("Bitte zwei Punkte setzen.");
   const type = document.querySelector('input[name="type"]:checked').value;
   const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF({ orientation:'landscape', unit:'mm', format:'a4' });
+  const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
 
-  // Temporär Karte maximieren für Screenshot
   const mapEl = document.getElementById('map');
   const originalHeight = mapEl.style.height;
-  mapEl.style.height = '600px';
+
+  // 1️⃣ Karte fullscreen für Screenshot
+  mapEl.style.height = `${window.innerHeight}px`;
+  window.scrollTo(0, 0);
   map.invalidateSize();
 
-  await new Promise(r => setTimeout(r, 800)); // Warten bis Karte gerendert ist
+  // 2️⃣ kurze Pause für Rendering
+  await new Promise(r => setTimeout(r, 800));
 
+  // 3️⃣ Screenshot der gesamten Karte
   html2canvas(mapEl, {
-    useCORS:true,
-    scale: 2, // höhere Qualität
-    scrollY: -window.scrollY
+    useCORS: true,
+    scale: 2,
+    windowWidth: document.documentElement.scrollWidth,
+    windowHeight: document.documentElement.scrollHeight
   }).then(canvas => {
     const imgData = canvas.toDataURL("image/png");
+
+    // Karte wiederherstellen
+    mapEl.style.height = originalHeight;
+    map.invalidateSize();
+
+    // 4️⃣ Seitenverhältnis berechnen, damit nichts abgeschnitten wird
     const pdfWidth = pdf.internal.pageSize.getWidth() - 20;
     const pdfHeight = (canvas.height / canvas.width) * pdfWidth;
+    const maxHeight = pdf.internal.pageSize.getHeight() - 40;
 
+    const finalHeight = pdfHeight > maxHeight ? maxHeight : pdfHeight;
+
+    // 5️⃣ Alles ins PDF setzen
     pdf.text(`Tirol - Viehbergung: ${type}`, 10, 10);
-    pdf.addImage(imgData, 'PNG', 10, 20, pdfWidth, pdfHeight);
+    pdf.addImage(imgData, 'PNG', 10, 20, pdfWidth, finalHeight);
 
-    pdf.setTextColor(0,0,0);
-    pdf.text(`Aufnahmeort: ${points[0].lat.toFixed(5)}, ${points[0].lng.toFixed(5)}`, 10, 20 + pdfHeight + 10);
-    pdf.text(`Ablageort:   ${points[1].lat.toFixed(5)}, ${points[1].lng.toFixed(5)}`, 10, 20 + pdfHeight + 20);
+    pdf.setTextColor(0, 0, 0);
+    pdf.text(`Aufnahmeort: ${points[0].lat.toFixed(5)}, ${points[0].lng.toFixed(5)}`, 10, 20 + finalHeight + 10);
+    pdf.text(`Ablageort:   ${points[1].lat.toFixed(5)}, ${points[1].lng.toFixed(5)}`, 10, 20 + finalHeight + 20);
 
     const now = new Date();
-    pdf.text(`Datum: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, 10, 20 + pdfHeight + 30);
+    pdf.text(`Datum: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, 10, 20 + finalHeight + 30);
 
     pdf.save(`fieldmap_Tirol_${type}.pdf`);
+  });
+};
+
 
     // Karte wieder normal setzen
     mapEl.style.height = originalHeight;
@@ -208,3 +226,4 @@ geocoder.on('markgeocode', e => map.setView(e.geocode.center, 14));
 </script>
 </body>
 </html>
+
