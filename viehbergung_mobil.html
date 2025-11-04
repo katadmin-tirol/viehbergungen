@@ -13,7 +13,7 @@ html, body {
   height: 100%;
   margin: 0;
   padding: 0;
-  font-family: 'Akagi Pro', sans-serif; /* Schrift anpassen */
+  font-family: 'Akagi Pro', sans-serif; /* Schriftart */
 }
 
 #map {
@@ -50,6 +50,7 @@ html, body {
   <label><input type="radio" name="type" value="Kadaver"> Kadaverbergung</label>
   <button id="reset">Zurücksetzen</button>
   <button id="exportPDF">Als PDF exportieren</button>
+  <button id="exportJPG">Als JPG exportieren</button>
   <select id="layerSwitch" class="layer-switch">
     <option value="osm">OSM-Karte</option>
     <option value="ortho">Orthophoto Tirol</option>
@@ -89,7 +90,7 @@ const orthophoto = L.tileLayer.wms("https://maps.tirol.gv.at/ogd/wms?SERVICE=WMS
   crossOrigin: true
 });
 
-// Standardlayer hinzufügen
+// Standardlayer
 osm.addTo(map);
 
 // Marker und Punkte
@@ -126,47 +127,4 @@ document.getElementById("reset").onclick = () => {
 
 // Layer wechseln
 document.getElementById("layerSwitch").addEventListener('change', (e) => {
-  map.eachLayer(layer => map.removeLayer(layer));
-  if (e.target.value === 'osm') osm.addTo(map);
-  if (e.target.value === 'ortho') orthophoto.addTo(map);
-  markers.forEach(m => m.addTo(map)); // Marker wieder hinzufügen
-});
-
-// PDF Export mit EasyPrint
-document.getElementById("exportPDF").onclick = () => {
-  if (points.length < 2) return alert("Bitte zwei Punkte setzen.");
-
-  const type = document.querySelector('input[name="type"]:checked').value;
-  const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-
-  const printer = L.easyPrint({
-    tileLayer: map.hasLayer(osm) ? osm : orthophoto,
-    sizeModes: ['A4Landscape'],
-    exportOnly: true,
-    hideControlContainer: true
-  });
-
-  printer.printMap('A4Landscape', 'png', (imgData) => {
-    pdf.text(`Fieldmap Tirol - ${type}`, 10, 10);
-    pdf.addImage(imgData, 'PNG', 10, 20, 260, 140);
-    pdf.text(`Aufnahmeort: ${points[0].lat.toFixed(5)}, ${points[0].lng.toFixed(5)}`, 10, 170);
-    pdf.text(`Ablageort:   ${points[1].lat.toFixed(5)}, ${points[1].lng.toFixed(5)}`, 10, 180);
-    const now = new Date();
-    pdf.text(`Datum: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, 10, 190);
-    pdf.save(`fieldmap_Tirol_${type}.pdf`);
-  });
-};
-
-// Karte dynamisch anpassen
-function resizeMap() {
-  const height = window.innerHeight * 0.8;
-  document.getElementById('map').style.height = height + "px";
-  map.invalidateSize();
-}
-window.addEventListener('resize', resizeMap);
-resizeMap();
-</script>
-
-</body>
-</html>
+  map.eachLayer(layer => map.removeLayer
