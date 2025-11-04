@@ -17,7 +17,7 @@
   }
 
   #map {
-    height: 80vh; /* Karte nimmt 80% der Höhe ein */
+    height: 80vh;
     width: 100%;
     touch-action: none;
   }
@@ -59,8 +59,8 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <!-- jsPDF für PDF Export -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<!-- html2canvas für Screenshot -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<!-- leaflet-image für PDF Rendering -->
+<script src="https://unpkg.com/leaflet-image/leaflet-image.js"></script>
 
 <script>
 // Karte initialisieren (Fokus Tirol)
@@ -72,10 +72,24 @@ const map = L.map('map', {
   doubleClickZoom: false
 }).setView([47.26, 11.40], 9);
 
-// OpenStreetMap Layer
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+// Basiskarten
+const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19,
   attribution: '© OpenStreetMap'
+});
+
+const orthophoto = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+  maxZoom: 17,
+  attribution: '© OpenTopoMap'
+});
+
+// Standardmäßig OSM hinzufügen
+osm.addTo(map);
+
+// Layer Control
+L.control.layers({
+  "OSM": osm,
+  "Orthophoto": orthophoto
 }).addTo(map);
 
 // Punkte und Marker
@@ -110,19 +124,19 @@ document.getElementById("reset").onclick = () => {
   document.getElementById("coords").innerHTML = "";
 };
 
-// PDF Export
-document.getElementById("exportPDF").onclick = async () => {
+// PDF Export mit leaflet-image
+document.getElementById("exportPDF").onclick = () => {
   if (points.length < 2) return alert("Bitte zwei Punkte setzen.");
-
   const type = document.querySelector('input[name="type"]:checked').value;
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
 
-  // Karte als Screenshot einfügen
-  html2canvas(map.getContainer()).then(canvas => {
+  leafletImage(map, function(err, canvas) {
+    if (err) return alert("Fehler beim Erstellen der Karte");
+
     const imgData = canvas.toDataURL("image/png");
     pdf.text(`Fieldmap Tirol - ${type}`, 10, 10);
-    pdf.addImage(imgData, 'PNG', 10, 20, 260, 140); // Bildgröße anpassen
+    pdf.addImage(imgData, 'PNG', 10, 20, 260, 140);
     pdf.text(`Aufnahmeort: ${points[0].lat.toFixed(5)}, ${points[0].lng.toFixed(5)}`, 10, 170);
     pdf.text(`Ablageort:   ${points[1].lat.toFixed(5)}, ${points[1].lng.toFixed(5)}`, 10, 180);
     const now = new Date();
@@ -140,7 +154,8 @@ function resizeMap() {
 
 window.addEventListener('resize', resizeMap);
 resizeMap();
-
 </script>
 </body>
 </html>
+
+
