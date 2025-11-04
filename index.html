@@ -17,23 +17,46 @@ html, body {
   font-family: 'Arial', sans-serif;
 }
 
-#map { height: 80vh; width: 100%; touch-action: none; }
+#map { 
+  height: 75vh; 
+  width: 100%; 
+  touch-action: none; 
+}
 
+/* Buttons & Layout */
 .controls {
-  display: flex; flex-wrap: wrap; gap: 10px; margin: 10px;
+  display: flex; 
+  flex-wrap: wrap; 
+  gap: 10px; 
+  margin: 10px;
 }
 
 .controls button, .controls label, .layer-switch {
-  font-size: 1.2em; padding: 8px 12px; cursor: pointer;
+  font-size: 1.1em; 
+  padding: 8px 12px; 
+  cursor: pointer;
 }
 
 #coords { margin: 10px; font-size: 1em; }
 
-#instruction { background-color:#f0f0f0; padding:10px; margin:10px 0; border-radius:5px; }
+#instruction { 
+  background-color:#f0f0f0; 
+  padding:10px; 
+  margin:10px 0; 
+  border-radius:5px; 
+  font-size: 0.95em;
+}
 
 /* Tooltip-Farben */
 .leaflet-tooltip-aufnahmeort { color: blue; font-weight: bold; }
 .leaflet-tooltip-ablageort { color: red; font-weight: bold; }
+
+/* Mobile Optimierung */
+@media (max-width: 768px) {
+  #map { height: 70vh; }
+  .controls { flex-direction: column; align-items: flex-start; }
+  button, select, label { width: 100%; }
+}
 </style>
 </head>
 <body>
@@ -129,17 +152,29 @@ document.getElementById("layerSwitch").addEventListener('change', (e) => {
   markers.forEach(m => m.addTo(map));
 });
 
-// PDF Export
-document.getElementById("exportPDF").onclick = () => {
+// 📱 PDF Export – Handy-kompatibel
+document.getElementById("exportPDF").onclick = async () => {
   if(points.length<2) return alert("Bitte zwei Punkte setzen.");
   const type = document.querySelector('input[name="type"]:checked').value;
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF({ orientation:'landscape', unit:'mm', format:'a4' });
 
-  html2canvas(map.getContainer(), {useCORS:true}).then(canvas => {
+  // Temporär Karte maximieren für Screenshot
+  const mapEl = document.getElementById('map');
+  const originalHeight = mapEl.style.height;
+  mapEl.style.height = '600px';
+  map.invalidateSize();
+
+  await new Promise(r => setTimeout(r, 800)); // Warten bis Karte gerendert ist
+
+  html2canvas(mapEl, {
+    useCORS:true,
+    scale: 2, // höhere Qualität
+    scrollY: -window.scrollY
+  }).then(canvas => {
     const imgData = canvas.toDataURL("image/png");
     const pdfWidth = pdf.internal.pageSize.getWidth() - 20;
-    const pdfHeight = (canvas.height/canvas.width) * pdfWidth;
+    const pdfHeight = (canvas.height / canvas.width) * pdfWidth;
 
     pdf.text(`Tirol - Viehbergung: ${type}`, 10, 10);
     pdf.addImage(imgData, 'PNG', 10, 20, pdfWidth, pdfHeight);
@@ -152,22 +187,24 @@ document.getElementById("exportPDF").onclick = () => {
     pdf.text(`Datum: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, 10, 20 + pdfHeight + 30);
 
     pdf.save(`fieldmap_Tirol_${type}.pdf`);
+
+    // Karte wieder normal setzen
+    mapEl.style.height = originalHeight;
+    map.invalidateSize();
   });
 };
 
 function resizeMap() {
-  const height = window.innerHeight*0.8;
+  const height = window.innerHeight*0.75;
   document.getElementById('map').style.height = height+'px';
   map.invalidateSize();
 }
 window.addEventListener('resize', resizeMap);
 resizeMap();
 
+// Ortssuche links offen, ohne Marker
 const geocoder = L.Control.geocoder({defaultMarkGeocode:false, collapsed:false}).addTo(map);
 geocoder.on('markgeocode', e => map.setView(e.geocode.center, 14));
 </script>
 </body>
 </html>
-
-
-
