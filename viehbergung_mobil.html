@@ -9,36 +9,36 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
 <style>
-  html, body {
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    font-family: sans-serif;
-  }
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'Akagi Pro', sans-serif; /* Schrift anpassen */
+}
 
-  #map {
-    height: 80vh;
-    width: 100%;
-    touch-action: none;
-  }
+#map {
+  height: 80vh;
+  width: 100%;
+  touch-action: none;
+}
 
-  .controls {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin: 10px;
-  }
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 10px;
+}
 
-  .controls button, .controls label {
-    font-size: 1.2em;
-    padding: 8px 12px;
-    cursor: pointer;
-  }
+.controls button, .controls label, .layer-switch {
+  font-size: 1.2em;
+  padding: 8px 12px;
+  cursor: pointer;
+}
 
-  #coords {
-    margin: 10px;
-    font-size: 1em;
-  }
+#coords {
+  margin: 10px;
+  font-size: 1em;
+}
 </style>
 </head>
 <body>
@@ -50,6 +50,10 @@
   <label><input type="radio" name="type" value="Kadaver"> Kadaverbergung</label>
   <button id="reset">Zurücksetzen</button>
   <button id="exportPDF">Als PDF exportieren</button>
+  <select id="layerSwitch" class="layer-switch">
+    <option value="osm">OSM-Karte</option>
+    <option value="ortho">Orthophoto Tirol</option>
+  </select>
 </div>
 
 <div id="map"></div>
@@ -57,10 +61,10 @@
 
 <!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<!-- jsPDF für PDF Export -->
+<!-- jsPDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<!-- leaflet-image für PDF Rendering -->
-<script src="https://unpkg.com/leaflet-image/leaflet-image.js"></script>
+<!-- Leaflet EasyPrint -->
+<script src="https://unpkg.com/leaflet-easyprint/dist/bundle.js"></script>
 
 <script>
 // Karte initialisieren (Fokus Tirol)
@@ -72,27 +76,23 @@ const map = L.map('map', {
   doubleClickZoom: false
 }).setView([47.26, 11.40], 9);
 
-// Basiskarten
+// Layer definieren
 const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19,
   attribution: '© OpenStreetMap'
 });
 
-const orthophoto = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-  maxZoom: 17,
-  attribution: '© OpenTopoMap'
+const orthophoto = L.tileLayer.wms("https://maps.tirol.gv.at/ogd/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=orthophoto&STYLES=&SRS=EPSG:4326&FORMAT=image/png&TRANSPARENT=false", {
+  layers: 'orthophoto',
+  format: 'image/png',
+  attribution: '© Land Tirol',
+  crossOrigin: true
 });
 
-// Standardmäßig OSM hinzufügen
+// Standardlayer hinzufügen
 osm.addTo(map);
 
-// Layer Control
-L.control.layers({
-  "OSM": osm,
-  "Orthophoto": orthophoto
-}).addTo(map);
-
-// Punkte und Marker
+// Marker und Punkte
 let points = [];
 let markers = [];
 
@@ -108,7 +108,7 @@ map.on('click', function(e) {
   updateCoords();
 });
 
-// Koordinaten unten anzeigen
+// Koordinaten anzeigen
 function updateCoords() {
   let text = "";
   if (points[0]) text += `📍 Aufnahmeort: ${points[0].lat.toFixed(5)}, ${points[0].lng.toFixed(5)}<br>`;
@@ -124,17 +124,30 @@ document.getElementById("reset").onclick = () => {
   document.getElementById("coords").innerHTML = "";
 };
 
-// PDF Export mit leaflet-image
+// Layer wechseln
+document.getElementById("layerSwitch").addEventListener('change', (e) => {
+  map.eachLayer(layer => map.removeLayer(layer));
+  if (e.target.value === 'osm') osm.addTo(map);
+  if (e.target.value === 'ortho') orthophoto.addTo(map);
+  markers.forEach(m => m.addTo(map)); // Marker wieder hinzufügen
+});
+
+// PDF Export mit EasyPrint
 document.getElementById("exportPDF").onclick = () => {
   if (points.length < 2) return alert("Bitte zwei Punkte setzen.");
+
   const type = document.querySelector('input[name="type"]:checked').value;
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
 
-  leafletImage(map, function(err, canvas) {
-    if (err) return alert("Fehler beim Erstellen der Karte");
+  const printer = L.easyPrint({
+    tileLayer: map.hasLayer(osm) ? osm : orthophoto,
+    sizeModes: ['A4Landscape'],
+    exportOnly: true,
+    hideControlContainer: true
+  });
 
-    const imgData = canvas.toDataURL("image/png");
+  printer.printMap('A4Landscape', 'png', (imgData) => {
     pdf.text(`Fieldmap Tirol - ${type}`, 10, 10);
     pdf.addImage(imgData, 'PNG', 10, 20, 260, 140);
     pdf.text(`Aufnahmeort: ${points[0].lat.toFixed(5)}, ${points[0].lng.toFixed(5)}`, 10, 170);
@@ -145,17 +158,15 @@ document.getElementById("exportPDF").onclick = () => {
   });
 };
 
-// Karte dynamisch an Bildschirmhöhe anpassen
+// Karte dynamisch anpassen
 function resizeMap() {
   const height = window.innerHeight * 0.8;
   document.getElementById('map').style.height = height + "px";
   map.invalidateSize();
 }
-
 window.addEventListener('resize', resizeMap);
 resizeMap();
 </script>
+
 </body>
 </html>
-
-
