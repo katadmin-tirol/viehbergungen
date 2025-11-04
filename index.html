@@ -152,46 +152,51 @@ document.getElementById("layerSwitch").addEventListener('change', (e) => {
   markers.forEach(m => m.addTo(map));
 });
 
-// 📱 PDF Export – Handy-kompatibel
+// 📱 PDF Export – Hochformat & vollständiger Kartenausschnitt
 document.getElementById("exportPDF").onclick = async () => {
-  if(points.length<2) return alert("Bitte zwei Punkte setzen.");
+  if(points.length < 2) return alert("Bitte zwei Punkte setzen.");
   const type = document.querySelector('input[name="type"]:checked').value;
   const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF({ orientation:'landscape', unit:'mm', format:'a4' });
+  const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
-  // Temporär Karte maximieren für Screenshot
   const mapEl = document.getElementById('map');
   const originalHeight = mapEl.style.height;
-  mapEl.style.height = '600px';
+
+  // Temporär Karte auf volle Höhe für Screenshot
+  mapEl.style.height = window.innerHeight + 'px';
   map.invalidateSize();
 
-  await new Promise(r => setTimeout(r, 800)); // Warten bis Karte gerendert ist
+  // Etwas warten, bis Leaflet vollständig gerendert ist
+  await new Promise(r => setTimeout(r, 1500));
 
-  html2canvas(mapEl, {
-    useCORS:true,
-    scale: 2, // höhere Qualität
+  const canvas = await html2canvas(mapEl, {
+    useCORS: true,
+    scale: 2,
     scrollY: -window.scrollY
-  }).then(canvas => {
-    const imgData = canvas.toDataURL("image/png");
-    const pdfWidth = pdf.internal.pageSize.getWidth() - 20;
-    const pdfHeight = (canvas.height / canvas.width) * pdfWidth;
-
-    pdf.text(`Tirol - Viehbergung: ${type}`, 10, 10);
-    pdf.addImage(imgData, 'PNG', 10, 20, pdfWidth, pdfHeight);
-
-    pdf.setTextColor(0,0,0);
-    pdf.text(`Aufnahmeort: ${points[0].lat.toFixed(5)}, ${points[0].lng.toFixed(5)}`, 10, 20 + pdfHeight + 10);
-    pdf.text(`Ablageort:   ${points[1].lat.toFixed(5)}, ${points[1].lng.toFixed(5)}`, 10, 20 + pdfHeight + 20);
-
-    const now = new Date();
-    pdf.text(`Datum: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, 10, 20 + pdfHeight + 30);
-
-    pdf.save(`fieldmap_Tirol_${type}.pdf`);
-
-    // Karte wieder normal setzen
-    mapEl.style.height = originalHeight;
-    map.invalidateSize();
   });
+
+  const imgData = canvas.toDataURL("image/png");
+  const pdfWidth = pdf.internal.pageSize.getWidth() - 20;
+  const pdfHeight = (canvas.height / canvas.width) * pdfWidth;
+
+  let yStart = 20;
+  pdf.text(`Tirol - Viehbergung: ${type}`, 10, yStart);
+  pdf.addImage(imgData, 'PNG', 10, yStart + 5, pdfWidth, pdfHeight);
+
+  // Koordinaten + Datum unterhalb der Karte
+  pdf.setTextColor(0, 0, 0);
+  let y = yStart + pdfHeight + 15;
+  pdf.text(`Aufnahmeort: ${points[0].lat.toFixed(5)}, ${points[0].lng.toFixed(5)}`, 10, y);
+  pdf.text(`Ablageort:   ${points[1].lat.toFixed(5)}, ${points[1].lng.toFixed(5)}`, 10, y + 10);
+
+  const now = new Date();
+  pdf.text(`Datum: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, 10, y + 20);
+
+  pdf.save(`fieldmap_Tirol_${type}.pdf`);
+
+  // Karte wieder auf Originalhöhe setzen
+  mapEl.style.height = originalHeight;
+  map.invalidateSize();
 };
 
 function resizeMap() {
