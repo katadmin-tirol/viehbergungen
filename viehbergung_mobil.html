@@ -68,6 +68,7 @@ html, body {
 <script src="https://unpkg.com/leaflet-easyprint/dist/bundle.js"></script>
 
 <script>
+  console.log("Test")
 // Karte initialisieren (Fokus Tirol)
 const map = L.map('map', {
   zoomControl: true,
@@ -128,3 +129,4 @@ document.getElementById("reset").onclick = () => {
 // Layer wechseln
 document.getElementById("layerSwitch").addEventListener('change', (e) => {
   map.eachLayer(layer => map.removeLayer
+
