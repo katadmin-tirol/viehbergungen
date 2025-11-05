@@ -174,7 +174,7 @@ document.getElementById("exportPDF").onclick = async () => {
   
   const type = document.querySelector('input[name="type"]:checked').value;
   const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const pdf = new jsPDF({ orientation: device === "desktop" ? 'landscape' : 'portrait', unit: 'mm', format: 'a4' });
 
   const mapEl = document.getElementById('map');
   const originalHeight = mapEl.style.height;
@@ -252,5 +252,6 @@ geocoder.on('markgeocode', e => map.setView(e.geocode.center, 14));
 </script>
 </body>
 </html>
+
 
 
