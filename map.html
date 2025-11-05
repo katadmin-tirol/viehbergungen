@@ -19,6 +19,7 @@ html, body {
 
 #map { 
   height: 75vh; 
+  min-height: 300px; /* Sicherstellen, dass Map immer sichtbar ist */
   width: 100%; 
   touch-action: none; 
 }
@@ -52,7 +53,7 @@ html, body {
 
 /* Mobile Optimierung */
 @media (max-width: 768px) {
-  #map { height: 70vh; }
+  #map { height: 70vh; min-height: 300px; }
   .controls { flex-direction: column; align-items: flex-start; }
   button, select, label { width: 100%; }
 }
@@ -107,17 +108,12 @@ const params = new URLSearchParams(window.location.search);
 const device = params.get('device');
 if (device === 'desktop') document.body.classList.add('desktop');
 
-// Der Rest bleibt unverändert
 // ---------------------------------------------------
 const map = L.map('map', { zoomControl: true, dragging: true, tap: true, touchZoom: true, doubleClickZoom: false }).setView([47.26, 11.40], 9);
 
 const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' });
 const topo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { maxZoom: 17, attribution: '© OpenTopoMap, OpenStreetMap' });
 osm.addTo(map);
-
-// --- Step 1: geocoder direkt nach Map initialisieren ---
-const geocoder = L.Control.geocoder({ defaultMarkGeocode: false, collapsed: false }).addTo(map);
-geocoder.on('markgeocode', e => map.setView(e.geocode.center, 14));
 
 // Marker-Icons definieren
 const blueIcon = new L.Icon({
@@ -179,7 +175,7 @@ document.getElementById("exportPDF").onclick = async () => {
   const type = document.querySelector('input[name="type"]:checked').value;
   const { jsPDF } = window.jspdf;
 
-  // 🔹 Desktop = Querformat, Mobil = Hochformat
+  // Desktop = Querformat, Mobil = Hochformat
   const pdf = new jsPDF({ 
     orientation: device === "desktop" ? "landscape" : "portrait", 
     unit: "mm", 
@@ -200,38 +196,31 @@ document.getElementById("exportPDF").onclick = async () => {
   map.fitBounds(bounds, { padding: [50, 50] });
   map.invalidateSize();
 
-  // PDF-Seitenmaße
   const pdfWidth = pdf.internal.pageSize.getWidth() - 20;
   const pdfHeight = pdf.internal.pageSize.getHeight() - 50;
 
-  // 🔹 Unterschiedliches Verhalten für Desktop vs. Mobile
-  if (device === "desktop") {
-    // Querformat, etwas geringere Höhe
-    mapEl.style.height = (pdfHeight * 5) + "px"; 
+  // Karte für PDF richtig skalieren
+  if(device === "desktop") {
+    mapEl.style.height = (pdfHeight * 5) + "px";
   } else {
-    // Mobil bleibt gleich
-    mapEl.style.height = (pdfHeight * window.devicePixelRatio) + "px";
+    mapEl.style.height = (pdfHeight * window.devicePixelRatio * 0.9) + "px";
   }
   map.invalidateSize();
 
-  await new Promise(r => setTimeout(r, 1000)); // kurze Wartezeit für Karten-Render
+  await new Promise(r => setTimeout(r, 1000)); // kurze Wartezeit
 
-  // Screenshot
   const canvas = await html2canvas(mapEl, { useCORS: true, scale: 2, scrollY: -window.scrollY });
   const imgData = canvas.toDataURL("image/png");
 
-  // Dynamische Anpassung der Bildgröße an PDF
   let imgWidth = pdfWidth;
   let imgHeight = (canvas.height / canvas.width) * imgWidth;
 
-  // Falls Karte zu hoch -> proportional verkleinern
   if (imgHeight > pdfHeight - 40) {
     const scale = (pdfHeight - 40) / imgHeight;
     imgWidth *= scale;
     imgHeight *= scale;
   }
 
-  // 📄 PDF-Inhalt
   let yStart = 20;
   pdf.setFontSize(14);
   pdf.text(`Tirol - Viehbergung: ${type}`, 10, yStart);
@@ -244,10 +233,8 @@ document.getElementById("exportPDF").onclick = async () => {
   const now = new Date();
   pdf.text(`🕒 Datum: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, 10, yText + 16);
 
-
   pdf.save(`fieldmap_Tirol_${type}.pdf`);
 
-  // Originalhöhe & Controls wiederherstellen
   mapEl.style.height = originalHeight;
   map.invalidateSize();
   map.setView(originalView, originalZoom);
@@ -255,12 +242,11 @@ document.getElementById("exportPDF").onclick = async () => {
   if (geocoder && geocoder.getContainer()) geocoder.getContainer().style.display = "";
 };
 
-
-
 // Karte an Fenstergröße anpassen
 function resizeMap() {
-  const height = window.innerHeight*0.75;
-  document.getElementById('map').style.height = height+'px';
+  const isDesktop = document.body.classList.contains('desktop');
+  const height = isDesktop ? window.innerHeight * 0.8 : window.innerHeight * 0.95;
+  document.getElementById('map').style.height = height + 'px';
   map.invalidateSize();
 }
 window.addEventListener('resize', resizeMap);
@@ -272,11 +258,3 @@ geocoder.on('markgeocode', e => map.setView(e.geocode.center, 14));
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
