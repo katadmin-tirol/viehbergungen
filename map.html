@@ -171,19 +171,25 @@ document.getElementById("layerSwitch").addEventListener('change', (e) => {
 // PDF-Export
 document.getElementById("exportPDF").onclick = async () => {
   if (points.length < 2) return alert("Bitte zwei Punkte setzen.");
-  
+
   const type = document.querySelector('input[name="type"]:checked').value;
   const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
-  const mapEl = document.getElementById('map');
+  // 🔹 Desktop = Querformat, Mobil = Hochformat
+  const pdf = new jsPDF({ 
+    orientation: device === "desktop" ? "landscape" : "portrait", 
+    unit: "mm", 
+    format: "a4" 
+  });
+
+  const mapEl = document.getElementById("map");
   const originalHeight = mapEl.style.height;
   const originalView = map.getCenter();
   const originalZoom = map.getZoom();
 
-  // Zoom-Control & Geocoder temporär ausblenden
+  // Zoom-Control & Geocoder ausblenden
   map.zoomControl.remove();
-  if (geocoder && geocoder.getContainer()) geocoder.getContainer().style.display = 'none';
+  if (geocoder && geocoder.getContainer()) geocoder.getContainer().style.display = "none";
 
   // Karte auf gesetzte Punkte zoomen
   const bounds = L.latLngBounds(points);
@@ -196,38 +202,39 @@ document.getElementById("exportPDF").onclick = async () => {
 
   // 🔹 Unterschiedliches Verhalten für Desktop vs. Mobile
   if (device === "desktop") {
-    // Desktop: moderate Höhe für gute Proportionen (verhindert Abschneiden)
-    mapEl.style.height = (pdfHeight * 6) + 'px'; // ca. 6 px/mm
+    // Querformat, etwas geringere Höhe
+    mapEl.style.height = (pdfHeight * 5) + "px"; 
   } else {
-    // Mobilgerät: wie bisher
-    mapEl.style.height = (pdfHeight * window.devicePixelRatio) + 'px';
+    // Mobil bleibt gleich
+    mapEl.style.height = (pdfHeight * window.devicePixelRatio) + "px";
   }
   map.invalidateSize();
 
-  await new Promise(r => setTimeout(r, 1000));
+  await new Promise(r => setTimeout(r, 1000)); // kurze Wartezeit für Karten-Render
 
   // Screenshot
   const canvas = await html2canvas(mapEl, { useCORS: true, scale: 2, scrollY: -window.scrollY });
   const imgData = canvas.toDataURL("image/png");
 
-  // Bildgrößenanpassung, damit es nie über die PDF-Seite hinausragt
+  // Dynamische Anpassung der Bildgröße an PDF
   let imgWidth = pdfWidth;
   let imgHeight = (canvas.height / canvas.width) * imgWidth;
-  const maxImgHeight = pdfHeight; // Max. erlaubte Höhe im PDF
 
-  if (imgHeight > maxImgHeight) {
-    imgHeight = maxImgHeight; // begrenzen, falls zu hoch
+  // Falls Karte zu hoch -> proportional verkleinern
+  if (imgHeight > pdfHeight - 40) {
+    const scale = (pdfHeight - 40) / imgHeight;
+    imgWidth *= scale;
+    imgHeight *= scale;
   }
 
-  // PDF-Inhalt
+  // 📄 PDF-Inhalt
   let yStart = 20;
   pdf.setFontSize(14);
   pdf.text(`Tirol - Viehbergung: ${type}`, 10, yStart);
-  pdf.addImage(imgData, 'PNG', 10, yStart + 5, imgWidth, imgHeight);
+  pdf.addImage(imgData, "PNG", 10, yStart + 5, imgWidth, imgHeight);
 
   const yText = yStart + imgHeight + 10;
   pdf.setFontSize(11);
-  pdf.setTextColor(0, 0, 0);
   pdf.text(`📍 Aufnahmeort: ${points[0].lat.toFixed(5)}, ${points[0].lng.toFixed(5)}`, 10, yText);
   pdf.text(`📍 Ablageort:   ${points[1].lat.toFixed(5)}, ${points[1].lng.toFixed(5)}`, 10, yText + 8);
   const now = new Date();
@@ -240,8 +247,9 @@ document.getElementById("exportPDF").onclick = async () => {
   map.invalidateSize();
   map.setView(originalView, originalZoom);
   map.addControl(L.control.zoom());
-  if (geocoder && geocoder.getContainer()) geocoder.getContainer().style.display = '';
+  if (geocoder && geocoder.getContainer()) geocoder.getContainer().style.display = "";
 };
+
 
 
 // Karte an Fenstergröße anpassen
@@ -259,6 +267,7 @@ geocoder.on('markgeocode', e => map.setView(e.geocode.center, 14));
 </script>
 </body>
 </html>
+
 
 
 
