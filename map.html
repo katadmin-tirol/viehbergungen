@@ -115,6 +115,10 @@ const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
 const topo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { maxZoom: 17, attribution: '© OpenTopoMap, OpenStreetMap' });
 osm.addTo(map);
 
+// --- Step 1: geocoder direkt nach Map initialisieren ---
+const geocoder = L.Control.geocoder({ defaultMarkGeocode: false, collapsed: false }).addTo(map);
+geocoder.on('markgeocode', e => map.setView(e.geocode.center, 14));
+
 // Marker-Icons definieren
 const blueIcon = new L.Icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png',
@@ -268,6 +272,7 @@ geocoder.on('markgeocode', e => map.setView(e.geocode.center, 14));
 </script>
 </body>
 </html>
+
 
 
 
