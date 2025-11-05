@@ -235,10 +235,11 @@ document.getElementById("exportPDF").onclick = async () => {
 
   const yText = yStart + imgHeight + 10;
   pdf.setFontSize(11);
-  pdf.text(Aufnahmeort: ${points[0].lat.toFixed(5)}, ${points[0].lng.toFixed(5)}`, 10, yText);
-  pdf.text(Ablageort:   ${points[1].lat.toFixed(5)}, ${points[1].lng.toFixed(5)}`, 10, yText + 8);
+  pdf.text(`📍 Aufnahmeort: ${points[0].lat.toFixed(5)}, ${points[0].lng.toFixed(5)}`, 10, yText);
+  pdf.text(`📍 Ablageort:   ${points[1].lat.toFixed(5)}, ${points[1].lng.toFixed(5)}`, 10, yText + 8);
   const now = new Date();
-  pdf.text(Datum: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, 10, yText + 16);
+  pdf.text(`🕒 Datum: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, 10, yText + 16);
+
 
   pdf.save(`fieldmap_Tirol_${type}.pdf`);
 
@@ -267,6 +268,7 @@ geocoder.on('markgeocode', e => map.setView(e.geocode.center, 14));
 </script>
 </body>
 </html>
+
 
 
 
