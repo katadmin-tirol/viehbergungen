@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Geräteauswahl – Tirol Viehbergung</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg, #eef2f3, #d9e2ec);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  margin: 0;
+  text-align: center;
+}
+
+h1 {
+  color: #333;
+  margin-bottom: 10px;
+}
+
+h2 {
+  color: #555;
+  font-weight: normal;
+  margin-bottom: 30px;
+}
+
+button {
+  margin: 15px;
+  padding: 15px 30px;
+  font-size: 1.2em;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  background-color: #0077cc;
+  color: white;
+  transition: background 0.3s;
+}
+
+button:hover {
+  background-color: #005fa3;
+}
+</style>
+</head>
+<body>
+
+<h1>Tirol - Viehbergungen</h>
+<h2>Wie greifen Sie auf die Seite zu?</h2>
+<p>Bitte wählen Sie Ihr Gerät:</p>
+
+<button onclick="window.location.href='map.html?device=mobile'">Mobilgerät</button>
+<button onclick="window.location.href='map.html?device=desktop'">Laptop / PC</button>
+
+</body>
+</html>
