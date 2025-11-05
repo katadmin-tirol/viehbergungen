@@ -19,7 +19,6 @@ html, body {
 
 #map { 
   height: 75vh; 
-  min-height: 300px; /* Sicherstellen, dass Map immer sichtbar ist */
   width: 100%; 
   touch-action: none; 
 }
@@ -53,7 +52,7 @@ html, body {
 
 /* Mobile Optimierung */
 @media (max-width: 768px) {
-  #map { height: 70vh; min-height: 300px; }
+  #map { height: 70vh; }
   .controls { flex-direction: column; align-items: flex-start; }
   button, select, label { width: 100%; }
 }
@@ -103,10 +102,9 @@ body.desktop .layer-switch {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <script>
-// --- Geräteauswahl auslesen ---
-const params = new URLSearchParams(window.location.search);
-const device = params.get('device');
-if (device === 'desktop') document.body.classList.add('desktop');
+// --- Automatische Geräteerkennung ---
+const isMobile = window.innerWidth <= 768;
+if(!isMobile) document.body.classList.add('desktop');
 
 // ---------------------------------------------------
 const map = L.map('map', { zoomControl: true, dragging: true, tap: true, touchZoom: true, doubleClickZoom: false }).setView([47.26, 11.40], 9);
@@ -175,9 +173,9 @@ document.getElementById("exportPDF").onclick = async () => {
   const type = document.querySelector('input[name="type"]:checked').value;
   const { jsPDF } = window.jspdf;
 
-  // Desktop = Querformat, Mobil = Hochformat
+  // Hoch- oder Querformat automatisch
   const pdf = new jsPDF({ 
-    orientation: device === "desktop" ? "landscape" : "portrait", 
+    orientation: isMobile ? "portrait" : "landscape", 
     unit: "mm", 
     format: "a4" 
   });
@@ -187,11 +185,7 @@ document.getElementById("exportPDF").onclick = async () => {
   const originalView = map.getCenter();
   const originalZoom = map.getZoom();
 
-  // Zoom-Control & Geocoder ausblenden
-  map.zoomControl.remove();
-  if (geocoder && geocoder.getContainer()) geocoder.getContainer().style.display = "none";
-
-  // Karte auf gesetzte Punkte zoomen
+  // Zoom auf Punkte
   const bounds = L.latLngBounds(points);
   map.fitBounds(bounds, { padding: [50, 50] });
   map.invalidateSize();
@@ -199,22 +193,16 @@ document.getElementById("exportPDF").onclick = async () => {
   const pdfWidth = pdf.internal.pageSize.getWidth() - 20;
   const pdfHeight = pdf.internal.pageSize.getHeight() - 50;
 
-  // Karte für PDF richtig skalieren
-  if(device === "desktop") {
-    mapEl.style.height = (pdfHeight * 5) + "px";
-  } else {
-    mapEl.style.height = (pdfHeight * window.devicePixelRatio * 0.9) + "px";
-  }
+  mapEl.style.height = (isMobile ? pdfHeight * window.devicePixelRatio : pdfHeight * 5) + "px";
   map.invalidateSize();
 
-  await new Promise(r => setTimeout(r, 1000)); // kurze Wartezeit
+  await new Promise(r => setTimeout(r, 1000));
 
   const canvas = await html2canvas(mapEl, { useCORS: true, scale: 2, scrollY: -window.scrollY });
   const imgData = canvas.toDataURL("image/png");
 
   let imgWidth = pdfWidth;
   let imgHeight = (canvas.height / canvas.width) * imgWidth;
-
   if (imgHeight > pdfHeight - 40) {
     const scale = (pdfHeight - 40) / imgHeight;
     imgWidth *= scale;
@@ -238,15 +226,12 @@ document.getElementById("exportPDF").onclick = async () => {
   mapEl.style.height = originalHeight;
   map.invalidateSize();
   map.setView(originalView, originalZoom);
-  map.addControl(L.control.zoom());
-  if (geocoder && geocoder.getContainer()) geocoder.getContainer().style.display = "";
 };
 
-// Karte an Fenstergröße anpassen
+// Map-Höhe an Fenstergröße anpassen
 function resizeMap() {
-  const isDesktop = document.body.classList.contains('desktop');
-  const height = isDesktop ? window.innerHeight * 0.8 : window.innerHeight * 0.95;
-  document.getElementById('map').style.height = height + 'px';
+  const height = isMobile ? window.innerHeight * 0.95 : window.innerHeight * 0.8;
+  document.getElementById('map').style.height = height+'px';
   map.invalidateSize();
 }
 window.addEventListener('resize', resizeMap);
