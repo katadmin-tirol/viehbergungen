@@ -156,10 +156,24 @@ map.on('click', function(e) {
 
 function updateCoords() {
   let text = "";
-  if(points[0]) text += `📍 Aufnahmeort: ${points[0].lat.toFixed(5)}, ${points[0].lng.toFixed(5)}<br>`;
-  if(points[1]) text += `📍 Ablageort: ${points[1].lat.toFixed(5)}, ${points[1].lng.toFixed(5)}`;
+
+  // Marker-Icon URLs
+  const blueIconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png';
+  const redIconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png';
+
+  if (points[0]) {
+    text += `<img src="${blueIconUrl}" width="15" height="25" style="vertical-align:middle;"> 
+             <strong>Aufnahmeort:</strong> ${points[0].lat.toFixed(5)}, ${points[0].lng.toFixed(5)}<br>`;
+  }
+
+  if (points[1]) {
+    text += `<img src="${redIconUrl}" width="15" height="25" style="vertical-align:middle;"> 
+             <strong>Ablageort:</strong> ${points[1].lat.toFixed(5)}, ${points[1].lng.toFixed(5)}`;
+  }
+
   document.getElementById("coords").innerHTML = text;
 }
+
 
 document.getElementById("reset").onclick = () => {
   points = [];
@@ -277,6 +291,7 @@ geocoder.on('markgeocode', e => map.setView(e.geocode.center, 14));
 </script>
 </body>
 </html>
+
 
 
 
