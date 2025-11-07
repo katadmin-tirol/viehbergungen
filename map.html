@@ -55,6 +55,12 @@ html, body {
   border-radius:5px; 
   font-size: 0.95em;
 }
+  
+  #instruction .instruction-title { 
+  display: block;
+  font-size: 1.3em;
+  margin-bottom: 5px;
+}
 
 /* Tooltip-Farben */
 .leaflet-tooltip-aufnahmeort { color: blue; font-weight: bold; }
@@ -84,7 +90,7 @@ body.desktop .layer-switch {
 <h3>Tirol - Viehbergung</h3>
 
 <div id="instruction">
-  <strong>Anleitung:</strong><br>
+  <strong class="instruction-title">Anleitung:</strong><br>
   1. Navigieren Sie zum <strong>passenden Kartenausschnitt</strong>. Nutzen Sie ggf. die Suchleiste (Eingabe + Enter). Über die Auswahlbox können Sie die Hintergrundkarte bei Bedarf ändern. <br>
   2. Wählen Sie aus, ob es sich um eine <strong>Lebendvieh- oder Kadaverbergung</strong> handelt.<br>
   3. Klicken Sie auf die Karte, um <strong>zuerst den</strong> <span class="highlight-blue">Aufnahmeort</span> und <strong>anschließend den</strong> <span class="highlight-red">Ablageort</span> zu markieren (max. 2 Punkte). Falls Sie falsche Punkte ausgewählt haben, klicken Sie auf "Zurücksetzen" und setzen Sie die Punkte dann erneut.<br>
@@ -291,6 +297,7 @@ geocoder.on('markgeocode', e => map.setView(e.geocode.center, 14));
 </script>
 </body>
 </html>
+
 
 
 
