@@ -17,21 +17,10 @@ html, body {
   font-family: 'Arial', sans-serif;
 }
   
-  .highlight-red {
-    color: red;
-    font-weight: bold;
-  }
+.highlight-red { color: red; font-weight: bold; }
+.highlight-blue { color: blue; font-weight: bold; }
 
-  .highlight-blue {
-    color: blue;
-    font-weight: bold;
-  }
-
-#map { 
-  height: 75vh; 
-  width: 100%; 
-  touch-action: none; 
-}
+#map { height: 75vh; width: 100%; touch-action: none; }
 
 .controls {
   display: flex; 
@@ -56,7 +45,7 @@ html, body {
   font-size: 0.95em;
 }
   
-  #instruction .instruction-title { 
+#instruction .instruction-title { 
   display: block;
   font-size: 1.3em;
   margin-bottom: 5px;
@@ -73,16 +62,11 @@ html, body {
   button, select, label { width: 100%; }
 }
 
-/* --- Desktop-spezifische Darstellung --- */
-body.desktop #map {
-  height: 80vh;
-}
+/* Desktop-spezifische Darstellung */
+body.desktop #map { height: 80vh; }
 body.desktop .controls button, 
 body.desktop .controls label, 
-body.desktop .layer-switch {
-  font-size: 1em;
-  padding: 6px 10px;
-}
+body.desktop .layer-switch { font-size: 1em; padding: 6px 10px; }
 </style>
 </head>
 <body>
@@ -91,9 +75,9 @@ body.desktop .layer-switch {
 
 <div id="instruction">
   <strong class="instruction-title">Anleitung:</strong><br>
-  1. Navigieren Sie zum <strong>passenden Kartenausschnitt</strong>. Nutzen Sie ggf. die Suchleiste (Eingabe + Enter). Über die Auswahlbox können Sie die Hintergrundkarte bei Bedarf ändern. <br>
+  1. Navigieren Sie zum <strong>passenden Kartenausschnitt</strong>. Nutzen Sie ggf. die Suchleiste (Eingabe + Enter). Über die Auswahlbox können Sie die Hintergrundkarte bei Bedarf ändern.<br>
   2. Wählen Sie aus, ob es sich um eine <strong>Lebendvieh- oder Kadaverbergung</strong> handelt.<br>
-  3. Klicken Sie auf die Karte, um <strong>zuerst den</strong> <span class="highlight-blue">Aufnahmeort</span> und <strong>anschließend den</strong> <span class="highlight-red">Ablageort</span> zu markieren (max. 2 Punkte). Falls Sie falsche Punkte ausgewählt haben, klicken Sie auf "Zurücksetzen" und setzen Sie die Punkte dann erneut.<br>
+  3. Klicken Sie auf die Karte, um <strong>zuerst den</strong> <span class="highlight-blue">Aufnahmeort</span> und <strong>anschließend den</strong> <span class="highlight-red">Ablageort</span> zu markieren (max. 2 Punkte). Falls Sie falsche Punkte ausgewählt haben, klicken Sie auf "Zurücksetzen".<br>
   4. Klicken Sie auf <strong>"Als PDF exportieren"</strong>, um die Karte zu speichern.<br>
 </div>
 
@@ -103,8 +87,8 @@ body.desktop .layer-switch {
   <button id="reset">Zurücksetzen</button>
   <button id="exportPDF">Als PDF exportieren</button>
   <select id="layerSwitch" class="layer-switch">
-    <option value="osm">OSM-Karte</option>
-    <option value="topo">Topographische Karte</option>
+    <option value="tirol" selected>Basiskarte</option>
+    <option value="ortho">Orthophoto Tirol</option>
   </select>
 </div>
 
@@ -118,18 +102,29 @@ body.desktop .layer-switch {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <script>
-// --- Automatische Geräteerkennung ---
+// --- Geräteerkennung ---
 const isMobile = window.innerWidth <= 768;
 if(!isMobile) document.body.classList.add('desktop');
 
-// ---------------------------------------------------
+// --- Karte initialisieren ---
 const map = L.map('map', { zoomControl: true, dragging: true, tap: true, touchZoom: true, doubleClickZoom: false }).setView([47.26, 11.40], 9);
 
-const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' });
-const topo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { maxZoom: 17, attribution: '© OpenTopoMap, OpenStreetMap' });
-osm.addTo(map);
+// --- Tirol WMTS (Standardkarte) ---
+const tirolWMTS = L.tileLayer('https://wmts.kartetirol.at/gdi_base_summer/{z}/{x}/{y}.png', {
+  tileSize: 256, minZoom: 0, maxZoom: 19,
+  attribution: '© Land Tirol', crossOrigin: true
+}).addTo(map);
 
-// Marker-Icons definieren
+// --- Orthophoto WMS ---
+const orthoWMSUrl = 'https://gis.tirol.gv.at/arcgis/services/Service_Public/orthofoto/MapServer/WMSServer';
+const ortho = L.tileLayer.wms(orthoWMSUrl, {
+  layers: 'Image_Aktuell_RGB',
+  format: 'image/png',
+  transparent: true,
+  attribution: '© Land Tirol'
+});
+
+// --- Marker-Icons ---
 const blueIcon = new L.Icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png',
     shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
@@ -141,10 +136,9 @@ const redIcon = new L.Icon({
     iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
 });
 
-// Marker und Punkte
+// --- Marker & Punkte ---
 let points = [], markers = [];
 
-// Karte klicken → Marker setzen
 map.on('click', function(e) {
   if (points.length >= 2) return alert("Nur zwei Punkte erlaubt (Aufnahme & Ablage).");
 
@@ -162,8 +156,6 @@ map.on('click', function(e) {
 
 function updateCoords() {
   let text = "";
-
-  // Marker-Icon URLs
   const blueIconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png';
   const redIconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png';
 
@@ -171,7 +163,6 @@ function updateCoords() {
     text += `<img src="${blueIconUrl}" width="15" height="25" style="vertical-align:middle;"> 
              <strong>Aufnahmeort:</strong> ${points[0].lat.toFixed(5)}, ${points[0].lng.toFixed(5)}<br>`;
   }
-
   if (points[1]) {
     text += `<img src="${redIconUrl}" width="15" height="25" style="vertical-align:middle;"> 
              <strong>Ablageort:</strong> ${points[1].lat.toFixed(5)}, ${points[1].lng.toFixed(5)}`;
@@ -180,7 +171,6 @@ function updateCoords() {
   document.getElementById("coords").innerHTML = text;
 }
 
-
 document.getElementById("reset").onclick = () => {
   points = [];
   markers.forEach(m => map.removeLayer(m));
@@ -188,75 +178,54 @@ document.getElementById("reset").onclick = () => {
   document.getElementById("coords").innerHTML = "";
 };
 
+// --- Layer-Switch ---
 document.getElementById("layerSwitch").addEventListener('change', (e) => {
   const value = e.target.value;
-  map.eachLayer(layer => map.removeLayer(layer));
-  if(value==='osm') osm.addTo(map);
-  if(value==='topo') topo.addTo(map);
+
+  map.removeLayer(tirolWMTS);
+  map.removeLayer(ortho);
+
+  if (value === 'tirol') tirolWMTS.addTo(map);
+  else if (value === 'ortho') ortho.addTo(map);
+
   markers.forEach(m => m.addTo(map));
 });
 
+// --- PDF Export ---
 document.getElementById("exportPDF").onclick = async () => {
   if (points.length < 2) return alert("Bitte zwei Punkte setzen.");
-
   const type = document.querySelector('input[name="type"]:checked').value;
   const { jsPDF } = window.jspdf;
-
-  const pdf = new jsPDF({
-    orientation: isMobile ? "portrait" : "landscape",
-    unit: "mm",
-    format: "a4"
-  });
+  const pdf = new jsPDF({ orientation: isMobile ? "portrait" : "landscape", unit: "mm", format: "a4" });
 
   const mapEl = document.getElementById("map");
   const originalHeight = mapEl.style.height;
   const originalView = map.getCenter();
   const originalZoom = map.getZoom();
 
-  // 🟢 Begrenzungsrechteck der Marker berechnen
   const bounds = L.latLngBounds(points);
-
-  // 🟢 PDF-Größe und Kartenhöhe bestimmen
   const pdfWidth = pdf.internal.pageSize.getWidth() - 20;
   const pdfHeight = pdf.internal.pageSize.getHeight() - 50;
 
-  // 🟢 Zuerst die Kartengröße anpassen, dann fitBounds aufrufen
   mapEl.style.height = (isMobile ? pdfHeight * window.devicePixelRatio : pdfHeight * 5) + "px";
   map.invalidateSize();
   map.fitBounds(bounds, { padding: [80, 80] });
   map.invalidateSize();
 
-  // kleine Pause, damit Tiles nachgeladen werden
   await new Promise(r => setTimeout(r, 1000));
 
   try {
-    // 🔴 Suchleiste und Zoom-Buttons ausblenden (nur falls vorhanden)
     const controlsToHide = document.querySelectorAll('.leaflet-control-zoom, .leaflet-control-geocoder');
-    controlsToHide.forEach(el => {
-      if (el) el.style.display = 'none';
-    });
+    controlsToHide.forEach(el => { if (el) el.style.display = 'none'; });
 
-    // Screenshot der Karte
-    const canvas = await html2canvas(mapEl, {
-      useCORS: true,
-      scale: 2,
-      scrollY: -window.scrollY
-    });
+    const canvas = await html2canvas(mapEl, { useCORS: true, scale: 1, scrollY: -window.scrollY });
 
-    // 🟢 Wieder einblenden
-    controlsToHide.forEach(el => {
-      if (el) el.style.display = '';
-    });
+    controlsToHide.forEach(el => { if (el) el.style.display = ''; });
 
     const imgData = canvas.toDataURL("image/png");
-
     let imgWidth = pdfWidth;
     let imgHeight = (canvas.height / canvas.width) * imgWidth;
-    if (imgHeight > pdfHeight - 40) {
-      const scale = (pdfHeight - 40) / imgHeight;
-      imgWidth *= scale;
-      imgHeight *= scale;
-    }
+    if (imgHeight > pdfHeight - 40) { const scale = (pdfHeight - 40) / imgHeight; imgWidth *= scale; imgHeight *= scale; }
 
     let yStart = 20;
     pdf.setFontSize(14);
@@ -275,15 +244,13 @@ document.getElementById("exportPDF").onclick = async () => {
     console.error("Fehler beim PDF-Export:", err);
     alert("Fehler beim Erstellen des PDFs. Details siehe Konsole.");
   } finally {
-    // Karte wiederherstellen
     mapEl.style.height = originalHeight;
     map.invalidateSize();
     map.setView(originalView, originalZoom);
   }
 };
 
-
-// Map-Höhe an Fenstergröße anpassen
+// --- Map-Höhe anpassen ---
 function resizeMap() {
   const height = isMobile ? window.innerHeight * 0.95 : window.innerHeight * 0.8;
   document.getElementById('map').style.height = height+'px';
@@ -292,20 +259,9 @@ function resizeMap() {
 window.addEventListener('resize', resizeMap);
 resizeMap();
 
-// Ortssuche
+// --- Ortssuche ---
 const geocoder = L.Control.geocoder({defaultMarkGeocode:false, collapsed:false}).addTo(map);
 geocoder.on('markgeocode', e => map.setView(e.geocode.center, 14));
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
