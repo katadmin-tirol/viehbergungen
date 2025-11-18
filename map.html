@@ -114,40 +114,6 @@ if(!isMobile) document.body.classList.add('desktop');
 // --- Karte initialisieren ---
 const map = L.map('map', { zoomControl: true, dragging: true, tap: true, touchZoom: true, doubleClickZoom: false }).setView([47.26, 11.40], 9);
 
-map.createPane('labels');
-map.getPane('labels').style.zIndex = 350;  
-map.getPane('labels').style.pointerEvents = 'none';
-
-
-// --- WMTS-Layer Tirol (xyz-kompatibel) ---
-const summer = L.tileLayer('https://wmts.kartetirol.at/gdi_base_summer/{z}/{x}/{y}.png', {
-  tileSize: 256,
-  minZoom: 0,
-  maxZoom: 19,
-  attribution: '© Land Tirol',
-  crossOrigin: true
-});
-
-const ortho = L.tileLayer('https://wmts.kartetirol.at/gdi_ortho/{z}/{x}/{y}.png', {
-  tileSize: 256,
-  minZoom: 0,
-  maxZoom: 19,
-  attribution: '© Land Tirol',
-  crossOrigin: true
-});
-
-// --- Beschriftung / Nomenklatur (immer sichtbar) ---
-const labels = L.tileLayer('https://wmts.kartetirol.at/gdi_nomenklatur/{z}/{x}/{y}.png', {
-  pane: 'labels',
-  tileSize: 256,
-  minZoom: 0,
-  maxZoom: 19,
-  attribution: '© Land Tirol (Labels)',
-  crossOrigin: true
-});
-labels.addTo(map);
-
-
 // --- Marker-Icons ---
 const blueIcon = new L.Icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png',
@@ -163,6 +129,38 @@ const redIcon = new L.Icon({
 // --- Marker & Punkte ---
 let points = [], markers = [];
 
+// --- WMTS-Layer Tirol (xyz-kompatibel) ---
+const summer = L.tileLayer('https://wmts.kartetirol.at/gdi_base_summer/{z}/{x}/{y}.png', {
+  tileSize: 256,
+  minZoom: 0,
+  maxZoom: 19,
+  attribution: '© Land Tirol',
+  crossOrigin: true
+});
+const ortho = L.tileLayer('https://wmts.kartetirol.at/gdi_ortho/{z}/{x}/{y}.png', {
+  tileSize: 256,
+  minZoom: 0,
+  maxZoom: 19,
+  attribution: '© Land Tirol',
+  crossOrigin: true
+});
+
+// --- Label-Layer immer unter Marker ---
+map.createPane('labelPane');
+map.getPane('labelPane').style.zIndex = 400; // unter MarkerPane (500)
+map.getPane('labelPane').style.pointerEvents = 'none';
+
+const labels = L.tileLayer('https://wmts.kartetirol.at/gdi_nomenklatur/{z}/{x}/{y}.png', {
+  pane: 'labelPane',
+  tileSize: 256,
+  minZoom: 0,
+  maxZoom: 19,
+  attribution: '© Land Tirol (Labels)',
+  crossOrigin: true
+});
+labels.addTo(map);
+
+// --- Marker setzen ---
 map.on('click', function(e) {
   if (points.length >= 2) return alert("Nur zwei Punkte erlaubt (Aufnahme & Ablage).");
 
@@ -204,32 +202,19 @@ document.getElementById("reset").onclick = () => {
 
 // --- Standard: Summer-Karte aktiv ---
 summer.addTo(map);
-labels.addTo(map);   
-
-// Labels immer oben drauf
+labels.addTo(map);
 
 document.getElementById("layerSwitch").addEventListener('change', (e) => {
   const value = e.target.value;
-
-  // Basiskarten entfernen
   map.removeLayer(summer);
   map.removeLayer(ortho);
 
-  // Neue Basiskarte aktivieren
-  if (value === 'summer') {
-    summer.addTo(map);
-  } else if (value === 'ortho') {
-    ortho.addTo(map);
-  }
+  if (value === 'summer') summer.addTo(map);
+  else if (value === 'ortho') ortho.addTo(map);
 
-  // Labels IMMER oben halten
   labels.addTo(map);
-
-  // Marker oben halten
   markers.forEach(m => m.addTo(map));
 });
-
-
 
 // --- PDF Export ---
 document.getElementById("exportPDF").onclick = async () => {
