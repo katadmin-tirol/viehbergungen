@@ -111,7 +111,23 @@ const isMobile = window.innerWidth <= 768;
 if(!isMobile) document.body.classList.add('desktop');
 
 // --- Karte initialisieren ---
-const map = L.map('map', { zoomControl: true, dragging: true, tap: true, touchZoom: true, doubleClickZoom: false }).setView([47.26, 11.40], 9);
+const map = L.map('map', { 
+    zoomControl: true, 
+    dragging: true, 
+    tap: true, 
+    touchZoom: true, 
+    doubleClickZoom: false 
+});
+
+// Tirol-Gesamt-Bounding-Box (inkl. Osttirol)
+const tirolBounds = L.latLngBounds(
+    [46.64, 10.09],
+    [47.74, 12.77]
+);
+
+map.fitBounds(tirolBounds, { padding: [20, 20]});
+
+
 
 // --- Marker-Icons ---
 const blueIcon = new L.Icon({
