@@ -61,7 +61,7 @@ html, body {
 
 /* Mobile Optimierung */
 @media (max-width: 768px) {
-  #map { height: 55vh; }
+  #map { height: 45vh; }
   .controls { flex-direction: column; align-items: flex-start; }
   button, select, label { width: 100%; }
 }
@@ -275,14 +275,7 @@ document.getElementById("exportPDF").onclick = async () => {
   }
 };
 
-// --- Map-Höhe anpassen ---
-function resizeMap() {
-  const height = isMobile ? window.innerHeight * 0.95 : window.innerHeight * 0.8;
-  document.getElementById('map').style.height = height+'px';
-  map.invalidateSize();
-}
-window.addEventListener('resize', resizeMap);
-resizeMap();
+
 
 // --- Ortssuche ---
 const geocoder = L.Control.geocoder({defaultMarkGeocode:false, collapsed:false}).addTo(map);
