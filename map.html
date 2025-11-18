@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet.browser.print/dist/leaflet.browser.print.min.css" />
+<script src="https://unpkg.com/leaflet.browser.print/dist/leaflet.browser.print.min.js"></script>
+
 <meta charset="utf-8" />
 <title>Tirol - Viehbergung</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -87,9 +91,10 @@ body.desktop .layer-switch { font-size: 1em; padding: 6px 10px; }
   <button id="reset">Zurücksetzen</button>
   <button id="exportPDF">Als PDF exportieren</button>
   <select id="layerSwitch" class="layer-switch">
-    <option value="tirol" selected>Basiskarte</option>
-    <option value="ortho">Orthophoto Tirol</option>
-  </select>
+  <option value="summer" selected>Basiskarte</option>
+  <option value="ortho">Orthophoto</option>
+</select>
+
 </div>
 
 <div id="map"></div>
@@ -109,20 +114,38 @@ if(!isMobile) document.body.classList.add('desktop');
 // --- Karte initialisieren ---
 const map = L.map('map', { zoomControl: true, dragging: true, tap: true, touchZoom: true, doubleClickZoom: false }).setView([47.26, 11.40], 9);
 
-// --- Tirol WMTS (Standardkarte) ---
-const tirolWMTS = L.tileLayer('https://wmts.kartetirol.at/gdi_base_summer/{z}/{x}/{y}.png', {
-  tileSize: 256, minZoom: 0, maxZoom: 19,
-  attribution: '© Land Tirol', crossOrigin: true
-}).addTo(map);
+map.createPane('labels');
+map.getPane('labels').style.zIndex = 650;  
+map.getPane('labels').style.pointerEvents = 'none';
 
-// --- Orthophoto WMS ---
-const orthoWMSUrl = 'https://gis.tirol.gv.at/arcgis/services/Service_Public/orthofoto/MapServer/WMSServer';
-const ortho = L.tileLayer.wms(orthoWMSUrl, {
-  layers: 'Image_Aktuell_RGB',
-  format: 'image/png',
-  transparent: true,
-  attribution: '© Land Tirol'
+
+// --- WMTS-Layer Tirol (xyz-kompatibel) ---
+const summer = L.tileLayer('https://wmts.kartetirol.at/gdi_base_summer/{z}/{x}/{y}.png', {
+  tileSize: 256,
+  minZoom: 0,
+  maxZoom: 19,
+  attribution: '© Land Tirol',
+  crossOrigin: true
 });
+
+const ortho = L.tileLayer('https://wmts.kartetirol.at/gdi_ortho/{z}/{x}/{y}.png', {
+  tileSize: 256,
+  minZoom: 0,
+  maxZoom: 19,
+  attribution: '© Land Tirol',
+  crossOrigin: true
+});
+
+// --- Beschriftung / Nomenklatur (immer sichtbar) ---
+const labels = L.tileLayer('https://wmts.kartetirol.at/gdi_nomenklatur/{z}/{x}/{y}.png', {
+  pane: 'labels',
+  tileSize: 256,
+  minZoom: 0,
+  maxZoom: 19,
+  attribution: '© Land Tirol (Labels)',
+  crossOrigin: true
+});
+
 
 // --- Marker-Icons ---
 const blueIcon = new L.Icon({
@@ -178,18 +201,34 @@ document.getElementById("reset").onclick = () => {
   document.getElementById("coords").innerHTML = "";
 };
 
-// --- Layer-Switch ---
+// --- Standard: Summer-Karte aktiv ---
+summer.addTo(map);
+labels.addTo(map);   
+
+// Labels immer oben drauf
+
 document.getElementById("layerSwitch").addEventListener('change', (e) => {
   const value = e.target.value;
 
-  map.removeLayer(tirolWMTS);
+  // Basiskarten entfernen
+  map.removeLayer(summer);
   map.removeLayer(ortho);
 
-  if (value === 'tirol') tirolWMTS.addTo(map);
-  else if (value === 'ortho') ortho.addTo(map);
+  // Neue Basiskarte aktivieren
+  if (value === 'summer') {
+    summer.addTo(map);
+  } else if (value === 'ortho') {
+    ortho.addTo(map);
+  }
 
+  // Labels IMMER oben halten
+  labels.addTo(map);
+
+  // Marker oben halten
   markers.forEach(m => m.addTo(map));
 });
+
+
 
 // --- PDF Export ---
 document.getElementById("exportPDF").onclick = async () => {
