@@ -303,10 +303,10 @@ function addLogo(pdf, imgData, x, y, maxWidth, maxHeight) {
 }
 
 // Links
-addLogo(pdf, landeslogo, 10, 10, 30, 20);
+addLogo(pdf, landeslogo, 10, 10, 20, 10);
 
 // Rechts
-addLogo(pdf, zivilschutzlogo, pdf.internal.pageSize.getWidth() - 40, 10, 30, 20);
+addLogo(pdf, zivilschutzlogo, pdf.internal.pageSize.getWidth() - 10, 10, 20, 10);
     // Map ins PDF einfügen
     pdf.addImage(imgData, "PNG", 10, yStart, imgWidth, imgHeight);
 
