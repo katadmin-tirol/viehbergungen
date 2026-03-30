@@ -90,8 +90,9 @@ body.desktop .layer-switch { font-size: 1em; padding: 6px 10px; }
   <button id="reset">Zurücksetzen</button>
   <button id="exportPDF">Als PDF exportieren</button>
   <select id="layerSwitch" class="layer-switch">
-  <option value="summer" selected>Basiskarte</option>
-  <option value="ortho">Orthophoto</option>
+<option value="ortho" selected>Orthophoto</option>
+  <option value="summer">Basiskarte</option>
+
 </select>
 
 </div>
@@ -215,8 +216,8 @@ document.getElementById("reset").onclick = () => {
   document.getElementById("coords").innerHTML = "";
 };
 
-// --- Standard: Summer-Karte aktiv ---
-summer.addTo(map);
+// --- Standard: Orthofoto aktiv ---
+ortho.addTo(map);
 labels.addTo(map);
 
 document.getElementById("layerSwitch").addEventListener('change', (e) => {
@@ -247,33 +248,55 @@ document.getElementById("exportPDF").onclick = async () => {
   const pdfWidth = pdf.internal.pageSize.getWidth() - 20;
   const pdfHeight = pdf.internal.pageSize.getHeight() - 50;
 
+  // Karte vergrößern für bessere Qualität
   mapEl.style.height = (isMobile ? pdfHeight * window.devicePixelRatio : pdfHeight * 5) + "px";
   map.invalidateSize();
   map.fitBounds(bounds, { padding: [80, 80] });
   map.invalidateSize();
-
-  await new Promise(r => setTimeout(r, 1000));
+  await new Promise(r => setTimeout(r, 500));
 
   try {
+    // Zoom-/Geocoder-Steuerelemente ausblenden
     const controlsToHide = document.querySelectorAll('.leaflet-control-zoom, .leaflet-control-geocoder');
     controlsToHide.forEach(el => { if (el) el.style.display = 'none'; });
 
-    const canvas = await html2canvas(mapEl, { useCORS: true, scale: 1, scrollY: -window.scrollY });
-
+    // Map als Canvas
+    const canvas = await html2canvas(mapEl, { useCORS: false, scale: 1, scrollY: -window.scrollY });
     controlsToHide.forEach(el => { if (el) el.style.display = ''; });
-
     const imgData = canvas.toDataURL("image/png");
+
     let imgWidth = pdfWidth;
     let imgHeight = (canvas.height / canvas.width) * imgWidth;
-    if (imgHeight > pdfHeight - 40) { const scale = (pdfHeight - 40) / imgHeight; imgWidth *= scale; imgHeight *= scale; }
+    if (imgHeight > pdfHeight - 40) { 
+      const scale = (pdfHeight - 40) / imgHeight; 
+      imgWidth *= scale; 
+      imgHeight *= scale; 
+    }
 
-    let yStart = 20;
-    pdf.setFontSize(14);
-    pdf.text(`Tirol - Viehbergung: ${type}`, 10, yStart);
-    pdf.addImage(imgData, "PNG", 10, yStart + 5, imgWidth, imgHeight);
+    const yStart = 25; // Startpunkt unter Logos
 
+function loadLogo(src) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => resolve(img);  // nur Image-Objekt zurückgeben
+    img.src = src;
+  });
+}
+
+const landeslogo = await loadLogo("landeslogo.png");
+const zivilschutzlogo = await loadLogo("zivilschutzlogo.png");
+
+    // Logos ins PDF einfügen
+pdf.addImage(landeslogo, "PNG", 10, 10, 30, 15); 
+pdf.addImage(zivilschutzlogo, "PNG", pdf.internal.pageSize.getWidth() - 40, 10, 30, 15);
+
+    // Map ins PDF einfügen
+    pdf.addImage(imgData, "PNG", 10, yStart, imgWidth, imgHeight);
+
+    // Text unter der Karte
     const yText = yStart + imgHeight + 10;
     pdf.setFontSize(11);
+    pdf.text(`Tirol - Viehbergung: ${type}`, 10, 18); 
     pdf.text(`Aufnahmeort: ${points[0].lat.toFixed(5)}, ${points[0].lng.toFixed(5)} WGS84-Decimal`, 10, yText);
     pdf.text(`Ablageort:   ${points[1].lat.toFixed(5)}, ${points[1].lng.toFixed(5)} WGS84-Decimal`, 10, yText + 8);
     const now = new Date();
