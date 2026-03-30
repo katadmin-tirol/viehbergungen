@@ -253,7 +253,7 @@ document.getElementById("exportPDF").onclick = async () => {
   map.invalidateSize();
   map.fitBounds(bounds, { padding: [80, 80] });
   map.invalidateSize();
-  await new Promise(r => setTimeout(r, 500));
+  await new Promise(r => setTimeout(r, 1000));
 
   try {
     // Zoom-/Geocoder-Steuerelemente ausblenden
@@ -261,7 +261,11 @@ document.getElementById("exportPDF").onclick = async () => {
     controlsToHide.forEach(el => { if (el) el.style.display = 'none'; });
 
     // Map als Canvas
-    const canvas = await html2canvas(mapEl, { useCORS: false, scale: 1, scrollY: -window.scrollY });
+const canvas = await html2canvas(mapEl, {
+  useCORS: true,
+  allowTaint: true,
+  scale: 2
+});
     controlsToHide.forEach(el => { if (el) el.style.display = ''; });
     const imgData = canvas.toDataURL("image/png");
 
@@ -287,9 +291,22 @@ const landeslogo = await loadLogo("landeslogo.png");
 const zivilschutzlogo = await loadLogo("zivilschutzlogo.png");
 
     // Logos ins PDF einfügen
-pdf.addImage(landeslogo, "PNG", 10, 10, 30, 15); 
-pdf.addImage(zivilschutzlogo, "PNG", pdf.internal.pageSize.getWidth() - 40, 10, 30, 15);
+function addLogo(pdf, imgData, x, y, maxWidth, maxHeight) {
+  const img = new Image();
+  img.src = imgData;
 
+  const ratio = Math.min(maxWidth / img.width, maxHeight / img.height);
+  const width = img.width * ratio;
+  const height = img.height * ratio;
+
+  pdf.addImage(imgData, "PNG", x, y, width, height);
+}
+
+// Links
+addLogo(pdf, landeslogo, 10, 10, 30, 20);
+
+// Rechts
+addLogo(pdf, zivilschutzlogo, pdf.internal.pageSize.getWidth() - 40, 10, 30, 20);
     // Map ins PDF einfügen
     pdf.addImage(imgData, "PNG", 10, yStart, imgWidth, imgHeight);
 
