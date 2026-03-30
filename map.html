@@ -323,27 +323,21 @@ addLogo(
     pdf.setFont("helvetica", "bold");
 pdf.setFontSize(16);
 
+pdf.setFont("helvetica", "bold");
+pdf.setFontSize(16);
 pdf.text(
   `Tirol - Viehbergung: ${type}`,
   pdf.internal.pageSize.getWidth() / 2,
   18,
   { align: "center" }
 );
-    pdf.text(`Aufnahmeort: ${points[0].lat.toFixed(5)}, ${points[0].lng.toFixed(5)} WGS84-Decimal`, 10, yText);
-    pdf.text(`Ablageort:   ${points[1].lat.toFixed(5)}, ${points[1].lng.toFixed(5)} WGS84-Decimal`, 10, yText + 8);
-    const now = new Date();
-    pdf.text(`Datum: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, 10, yText + 16);
 
-    pdf.save(`viehbergung_tirol_${type}.pdf`);
-  } catch (err) {
-    console.error("Fehler beim PDF-Export:", err);
-    alert("Fehler beim Erstellen des PDFs. Details siehe Konsole.");
-  } finally {
-    mapEl.style.height = originalHeight;
-    map.invalidateSize();
-    map.setView(originalView, originalZoom);
-  }
-};
+pdf.setFont("helvetica", "normal");
+pdf.setFontSize(11);
+pdf.text(`Aufnahmeort: ${points[0].lat.toFixed(5)}, ${points[0].lng.toFixed(5)} WGS84-Decimal`, 10, yText);
+pdf.text(`Ablageort:   ${points[1].lat.toFixed(5)}, ${points[1].lng.toFixed(5)} WGS84-Decimal`, 10, yText + 8);
+const now = new Date();
+pdf.text(`Datum: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, 10, yText + 16);
 
 
 
