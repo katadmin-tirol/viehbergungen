@@ -291,23 +291,36 @@ const landeslogo = await loadLogo("landeslogo.png");
 const zivilschutzlogo = await loadLogo("zivilschutzlogo.png");
 
     // Logos ins PDF einfügen
-function addLogo(pdf, imgData, x, y, maxWidth, maxHeight) {
-  const img = new Image();
-  img.src = imgData;
-
+function addLogo(pdf, img, x, y, maxWidth, maxHeight) {
   const ratio = Math.min(maxWidth / img.width, maxHeight / img.height);
+  const width = img.width * ratio;
+  const height = img.height * ratio;
+
+  pdf.addImage(img, "PNG", x, y, width, height);
+}
   const width = img.width * ratio;
   const height = img.height * ratio;
 
   pdf.addImage(imgData, "PNG", x, y, width, height);
 }
 
+const logoWidth = 25;
+const logoHeight = 15;
+
 // Links
-addLogo(pdf, landeslogo, 10, 10, 20, 10);
+addLogo(pdf, landeslogo, 10, 10, logoWidth, logoHeight);
 
 // Rechts
-addLogo(pdf, zivilschutzlogo, pdf.internal.pageSize.getWidth() - 10, 10, 20, 10);
-    // Map ins PDF einfügen
+addLogo(
+  pdf,
+  zivilschutzlogo,
+  pdf.internal.pageSize.getWidth() - logoWidth - 10,
+  10,
+  logoWidth,
+  logoHeight
+);
+    
+// Map ins PDF einfügen
     pdf.addImage(imgData, "PNG", 10, yStart, imgWidth, imgHeight);
 
     // Text unter der Karte
