@@ -298,12 +298,6 @@ function addLogo(pdf, img, x, y, maxWidth, maxHeight) {
 
   pdf.addImage(img, "PNG", x, y, width, height);
 }
-  const width = img.width * ratio;
-  const height = img.height * ratio;
-
-  pdf.addImage(imgData, "PNG", x, y, width, height);
-}
-
 const logoWidth = 25;
 const logoHeight = 15;
 
