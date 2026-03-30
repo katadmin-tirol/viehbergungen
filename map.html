@@ -261,11 +261,7 @@ document.getElementById("exportPDF").onclick = async () => {
     controlsToHide.forEach(el => { if (el) el.style.display = 'none'; });
 
     // Map als Canvas
-const canvas = await html2canvas(mapEl, {
-  useCORS: true,
-  allowTaint: true,
-  scale: 2
-});
+    const canvas = await html2canvas(mapEl, { useCORS: true, allowTaint: true, scale: 2 });
     controlsToHide.forEach(el => { if (el) el.style.display = ''; });
     const imgData = canvas.toDataURL("image/png");
 
@@ -279,66 +275,62 @@ const canvas = await html2canvas(mapEl, {
 
     const yStart = 25; // Startpunkt unter Logos
 
-function loadLogo(src) {
-  return new Promise(resolve => {
-    const img = new Image();
-    img.onload = () => resolve(img);  // nur Image-Objekt zurückgeben
-    img.src = src;
-  });
-}
+    function loadLogo(src) {
+      return new Promise(resolve => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.src = src;
+      });
+    }
 
-const landeslogo = await loadLogo("landeslogo.png");
-const zivilschutzlogo = await loadLogo("zivilschutzlogo.png");
+    const landeslogo = await loadLogo("landeslogo.png");
+    const zivilschutzlogo = await loadLogo("zivilschutzlogo.png");
 
-    // Logos ins PDF einfügen
-function addLogo(pdf, img, x, y, maxWidth, maxHeight) {
-  const ratio = Math.min(maxWidth / img.width, maxHeight / img.height);
-  const width = img.width * ratio;
-  const height = img.height * ratio;
+    function addLogo(pdf, img, x, y, maxWidth, maxHeight) {
+      const ratio = Math.min(maxWidth / img.width, maxHeight / img.height);
+      const width = img.width * ratio;
+      const height = img.height * ratio;
+      pdf.addImage(img, "PNG", x, y, width, height);
+    }
 
-  pdf.addImage(img, "PNG", x, y, width, height);
-}
-const logoWidth = 25;
-const logoHeight = 15;
+    const logoWidth = 25;
+    const logoHeight = 15;
 
-// Links
-addLogo(pdf, landeslogo, 10, 10, logoWidth, logoHeight);
+    // Logos einfügen
+    addLogo(pdf, landeslogo, 10, 10, logoWidth, logoHeight); // links
+    addLogo(pdf, zivilschutzlogo, pdf.internal.pageSize.getWidth() - logoWidth - 10, 10, logoWidth, logoHeight); // rechts
 
-// Rechts
-addLogo(
-  pdf,
-  zivilschutzlogo,
-  pdf.internal.pageSize.getWidth() - logoWidth - 10,
-  10,
-  logoWidth,
-  logoHeight
-);
-    
-// Map ins PDF einfügen
+    // Karte ins PDF einfügen
     pdf.addImage(imgData, "PNG", 10, yStart, imgWidth, imgHeight);
 
-    // Text unter der Karte
+    // --- TEXT ---
     const yText = yStart + imgHeight + 10;
-    pdf.setFontSize(11);
+
+    // Überschrift fett & größer, zentriert
     pdf.setFont("helvetica", "bold");
-pdf.setFontSize(16);
+    pdf.setFontSize(16);
+    pdf.text(`Tirol - Viehbergung: ${type}`, pdf.internal.pageSize.getWidth() / 2, 18, { align: "center" });
 
-pdf.setFont("helvetica", "bold");
-pdf.setFontSize(16);
-pdf.text(
-  `Tirol - Viehbergung: ${type}`,
-  pdf.internal.pageSize.getWidth() / 2,
-  18,
-  { align: "center" }
-);
+    // Restlicher Text normal
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(11);
+    pdf.text(`Aufnahmeort: ${points[0].lat.toFixed(5)}, ${points[0].lng.toFixed(5)} WGS84-Decimal`, 10, yText);
+    pdf.text(`Ablageort:   ${points[1].lat.toFixed(5)}, ${points[1].lng.toFixed(5)} WGS84-Decimal`, 10, yText + 8);
+    const now = new Date();
+    pdf.text(`Datum: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, 10, yText + 16);
 
-pdf.setFont("helvetica", "normal");
-pdf.setFontSize(11);
-pdf.text(`Aufnahmeort: ${points[0].lat.toFixed(5)}, ${points[0].lng.toFixed(5)} WGS84-Decimal`, 10, yText);
-pdf.text(`Ablageort:   ${points[1].lat.toFixed(5)}, ${points[1].lng.toFixed(5)} WGS84-Decimal`, 10, yText + 8);
-const now = new Date();
-pdf.text(`Datum: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, 10, yText + 16);
+    // PDF speichern
+    pdf.save(`viehbergung_tirol_${type}.pdf`);
 
+  } catch (err) {
+    console.error("Fehler beim PDF-Export:", err);
+    alert("Fehler beim Erstellen des PDFs. Details siehe Konsole.");
+  } finally {
+    mapEl.style.height = originalHeight;
+    map.invalidateSize();
+    map.setView(originalView, originalZoom);
+  }
+};
 
 
 // --- Ortssuche ---
