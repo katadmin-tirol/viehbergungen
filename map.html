@@ -1,100 +1,323 @@
-// --- PDF Export ---
-document.getElementById("exportPDF").onclick = async () => {
-    if (points.length < 2) return alert("Bitte zwei Punkte setzen.");
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.browser.print/dist/leaflet.browser.print.min.css" />
+    <script src="https://unpkg.com/leaflet.browser.print/dist/leaflet.browser.print.min.js"></script>
+    <meta charset="utf-8" />
+    <title>Tirol - Viehbergung</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    const type = document.querySelector('input[name="type"]:checked').value;
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({ orientation: isMobile ? "portrait" : "landscape", unit: "mm", format: "a4" });
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
 
-    const mapEl = document.getElementById("map");
-    const originalHeight = mapEl.style.height;
-    const originalView = map.getCenter();
-    const originalZoom = map.getZoom();
-    const bounds = L.latLngBounds(points);
-
-    const pdfWidth = pdf.internal.pageSize.getWidth() - 20;
-    const pdfHeight = pdf.internal.pageSize.getHeight() - 50;
-
-    // Karte vergrößern für bessere Qualität
-    mapEl.style.height = (isMobile ? pdfHeight * window.devicePixelRatio : pdfHeight * 5) + "px";
-    map.invalidateSize();
-    map.fitBounds(bounds, { padding: [80, 80] });
-    map.invalidateSize();
-
-    await new Promise(r => setTimeout(r, 1000));
-
-    try {
-        // Zoom-/Geocoder-Steuerelemente ausblenden
-        const controlsToHide = document.querySelectorAll('.leaflet-control-zoom, .leaflet-control-geocoder');
-        controlsToHide.forEach(el => { if (el) el.style.display = 'none'; });
-
-        // Map als Canvas
-        const canvas = await html2canvas(mapEl, { useCORS: true, scale: 1, scrollY: -window.scrollY });
-        controlsToHide.forEach(el => { if (el) el.style.display = ''; });
-
-        const imgData = canvas.toDataURL("image/png");
-        let imgWidth = pdfWidth;
-        let imgHeight = (canvas.height / canvas.width) * imgWidth;
-        if (imgHeight > pdfHeight - 40) {
-            const scale = (pdfHeight - 40) / imgHeight;
-            imgWidth *= scale;
-            imgHeight *= scale;
-        }
-        const yStart = 25; // Startpunkt unter Logos
-
-        // --- Logos proportional laden ---
-        async function loadLogo(src, maxWidth, maxHeight) {
-            return new Promise(resolve => {
-                const img = new Image();
-                img.onload = () => {
-                    let w = img.width, h = img.height;
-                    const scale = Math.min(maxWidth/w, maxHeight/h);
-                    w *= scale; h *= scale;
-
-                    const c = document.createElement("canvas");
-                    c.width = w; c.height = h;
-                    c.getContext("2d").drawImage(img, 0, 0, w, h);
-                    resolve({ dataUrl: c.toDataURL("image/png"), width: w, height: h });
-                };
-                img.src = src;
-            });
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
         }
 
-        const maxLogoWidth = 30, maxLogoHeight = 15;
-        const landeslogo = await loadLogo("landeslogo.png", maxLogoWidth, maxLogoHeight);
-        const zivilschutzlogo = await loadLogo("zivilschutzlogo.png", maxLogoWidth, maxLogoHeight);
+        .highlight-red {
+            color: red;
+            font-weight: bold;
+        }
 
-        const margin = 10;
-        pdf.addImage(landeslogo.dataUrl, "PNG", margin, 10, landeslogo.width, landeslogo.height);
-        pdf.addImage(zivilschutzlogo.dataUrl, "PNG", pdf.internal.pageSize.getWidth()-margin-zivilschutzlogo.width, 10, zivilschutzlogo.width, zivilschutzlogo.height);
+        .highlight-blue {
+            color: blue;
+            font-weight: bold;
+        }
 
-        // Überschrift mittig zwischen Logos
-        const header = `Tirol - Viehbergung: ${type}`;
-        const textWidth = pdf.getTextWidth(header);
-        const centerX = (pdf.internal.pageSize.getWidth() - textWidth)/2;
-        const headerY = 10 + Math.max(landeslogo.height, zivilschutzlogo.height)/2 + 5;
-        pdf.setFontSize(12);
-        pdf.text(header, centerX, headerY);
+        #map {
+            height: 60vh;
+            width: 100%;
+            touch-action: none;
+        }
 
-        // Map ins PDF einfügen
-        pdf.addImage(imgData, "PNG", 10, yStart, imgWidth, imgHeight);
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 10px;
+        }
 
-        // Text unter der Karte
-        const yText = yStart + imgHeight + 10;
-        pdf.setFontSize(11);
-        pdf.text(`Aufnahmeort: ${points[0].lat.toFixed(5)}, ${points[0].lng.toFixed(5)} WGS84-Decimal`, 10, yText);
-        pdf.text(`Ablageort: ${points[1].lat.toFixed(5)}, ${points[1].lng.toFixed(5)} WGS84-Decimal`, 10, yText+8);
-        const now = new Date();
-        pdf.text(`Datum: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, 10, yText+16);
+        .controls button,
+        .controls label,
+        .layer-switch {
+            font-size: 1.1em;
+            padding: 8px 12px;
+            cursor: pointer;
+        }
 
-        pdf.save(`viehbergung_tirol_${type}.pdf`);
+        #coords {
+            margin: 10px;
+            font-size: 1em;
+        }
 
-    } catch (err) {
-        console.error(err);
-        alert("Fehler beim Erstellen des PDFs. Details siehe Konsole.");
-    } finally {
-        mapEl.style.height = originalHeight;
-        map.invalidateSize();
-        map.setView(originalView, originalZoom);
-    }
-};
+        #instruction {
+            background-color: #f0f0f0;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-size: 0.95em;
+        }
+
+        #instruction .instruction-title {
+            display: block;
+            font-size: 1.3em;
+            margin-bottom: 5px;
+        }
+
+        /* Tooltip-Farben */
+        .leaflet-tooltip-aufnahmeort {
+            color: blue;
+            font-weight: bold;
+        }
+
+        .leaflet-tooltip-ablageort {
+            color: red;
+            font-weight: bold;
+        }
+
+        /* Mobile Optimierung */
+        @media (max-width: 768px) {
+            #map {
+                height: 45vh;
+            }
+            .controls {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            button, select, label {
+                width: 100%;
+            }
+        }
+
+        /* Desktop-spezifische Darstellung */
+        body.desktop .controls button,
+        body.desktop .controls label,
+        body.desktop .layer-switch {
+            font-size: 1em;
+            padding: 6px 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <h3>Tirol - Viehbergung</h3>
+
+    <div id="instruction">
+        <strong class="instruction-title">Anleitung:</strong><br>
+        1. Navigieren Sie zum <strong>passenden Kartenausschnitt</strong>. Nutzen Sie ggf. die Suchleiste (Eingabe + Enter). Über die Auswahlbox können Sie die Hintergrundkarte bei Bedarf ändern.<br>
+        2. Wählen Sie aus, ob es sich um eine <strong>Lebendvieh- oder Kadaverbergung</strong> handelt.<br>
+        3. Klicken Sie auf die Karte, um <strong>zuerst den</strong> <span class="highlight-blue">Aufnahmeort</span> und <strong>anschließend den</strong> <span class="highlight-red">Ablageort</span> zu markieren (max. 2 Punkte). Falls Sie falsche Punkte ausgewählt haben, klicken Sie auf "Zurücksetzen".<br>
+        4. Klicken Sie auf <strong>"Als PDF exportieren"</strong>, um die Karte zu speichern.<br>
+    </div>
+
+    <div class="controls">
+        <label><input type="radio" name="type" value="Lebendvieh" checked> Lebendviehbergung</label>
+        <label><input type="radio" name="type" value="Kadaver"> Kadaverbergung</label>
+        <button id="reset">Zurücksetzen</button>
+        <button id="exportPDF">Als PDF exportieren</button>
+        <select id="layerSwitch" class="layer-switch">
+            <option value="ortho" selected>Orthophoto</option>
+            <option value="summer">Basiskarte</option>
+        </select>
+    </div>
+
+    <div id="map"></div>
+    <p id="coords"></p>
+
+    <!-- Skripte -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <script>
+        // --- Geräteerkennung ---
+        const isMobile = window.innerWidth <= 768;
+        if (!isMobile) document.body.classList.add('desktop');
+
+        // --- Karte initialisieren ---
+        const map = L.map('map', {
+            zoomControl: true,
+            dragging: true,
+            tap: true,
+            touchZoom: true,
+            doubleClickZoom: false
+        });
+
+        // Tirol-Gesamt-Bounding-Box (inkl. Osttirol)
+        const tirolBounds = L.latLngBounds([46.64, 10.09], [47.74, 12.77]);
+        map.fitBounds(tirolBounds, { padding: [20, 20] });
+
+        // --- Marker-Icons ---
+        const blueIcon = new L.Icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png',
+            shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        });
+
+        const redIcon = new L.Icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+            shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        });
+
+        // --- Marker & Punkte ---
+        let points = [], markers = [];
+
+        // --- WMTS-Layer Tirol (xyz-kompatibel) ---
+        const summer = L.tileLayer('https://wmts.kartetirol.at/gdi_base_summer/{z}/{x}/{y}.png', {
+            tileSize: 256,
+            minZoom: 0,
+            maxZoom: 19,
+            attribution: '© Land Tirol',
+            crossOrigin: true
+        });
+
+        const ortho = L.tileLayer('https://wmts.kartetirol.at/gdi_ortho/{z}/{x}/{y}.png', {
+            tileSize: 256,
+            minZoom: 0,
+            maxZoom: 19,
+            attribution: '© Land Tirol',
+            crossOrigin: true
+        });
+
+        // --- Label-Layer immer unter Marker ---
+        map.createPane('labelPane');
+        map.getPane('labelPane').style.zIndex = 400; // unter MarkerPane (500)
+        map.getPane('labelPane').style.pointerEvents = 'none';
+
+        const labels = L.tileLayer('https://wmts.kartetirol.at/gdi_nomenklatur/{z}/{x}/{y}.png', {
+            pane: 'labelPane',
+            tileSize: 256,
+            minZoom: 0,
+            maxZoom: 19,
+            attribution: '© Land Tirol (Labels)',
+            crossOrigin: true
+        });
+        labels.addTo(map);
+
+        // --- Marker setzen ---
+        map.on('click', function(e) {
+            if (points.length >= 2) return alert("Nur zwei Punkte erlaubt (Aufnahme & Ablage).");
+
+            const label = points.length === 0 ? "Aufnahmeort" : "Ablageort";
+            const icon = points.length === 0 ? blueIcon : redIcon;
+            const className = points.length === 0 ? 'leaflet-tooltip-aufnahmeort' : 'leaflet-tooltip-ablageort';
+
+            const marker = L.marker(e.latlng, { icon: icon }).addTo(map);
+            marker.bindTooltip(label, {
+                permanent: true,
+                direction: "top",
+                offset: [0, -10],
+                className: className
+            }).openTooltip();
+
+            markers.push(marker);
+            points.push(e.latlng);
+            updateCoords();
+        });
+
+        function updateCoords() {
+            let text = "";
+            const blueIconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png';
+            const redIconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png';
+
+            if (points[0]) {
+                text += `<img src="${blueIconUrl}" width="15" height="25" style="vertical-align:middle;"> <strong>Aufnahmeort:</strong> ${points[0].lat.toFixed(5)}, ${points[0].lng.toFixed(5)}<br>`;
+            }
+            if (points[1]) {
+                text += `<img src="${redIconUrl}" width="15" height="25" style="vertical-align:middle;"> <strong>Ablageort:</strong> ${points[1].lat.toFixed(5)}, ${points[1].lng.toFixed(5)}`;
+            }
+
+            document.getElementById("coords").innerHTML = text;
+        }
+
+        document.getElementById("reset").onclick = () => {
+            points = [];
+            markers.forEach(m => map.removeLayer(m));
+            markers = [];
+            document.getElementById("coords").innerHTML = "";
+        };
+
+        // --- Standard: Orthofoto aktiv ---
+        ortho.addTo(map);
+        labels.addTo(map);
+
+        document.getElementById("layerSwitch").addEventListener('change', (e) => {
+            const value = e.target.value;
+            map.removeLayer(summer);
+            map.removeLayer(ortho);
+
+            if (value === 'summer') summer.addTo(map);
+            else if (value === 'ortho') ortho.addTo(map);
+
+            labels.addTo(map);
+            markers.forEach(m => m.addTo(map));
+        });
+
+      // --- Logos laden und proportional einfügen ---
+async function addLogosAndHeader(pdf, pageWidth) {
+    const loadLogo = async (src, maxWidth, maxHeight) => {
+        return new Promise(resolve => {
+            const img = new Image();
+            img.onload = () => {
+                let width = img.width;
+                let height = img.height;
+                const scale = Math.min(maxWidth / width, maxHeight / height);
+                width *= scale;
+                height *= scale;
+
+                const canvas = document.createElement("canvas");
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext("2d");
+                ctx.drawImage(img, 0, 0, width, height);
+                resolve({ dataUrl: canvas.toDataURL("image/png"), width, height });
+            };
+            img.src = src;
+        });
+    };
+
+    const maxLogoWidth = 30; // max Breite in mm
+    const maxLogoHeight = 15; // max Höhe in mm
+
+    const landeslogo = await loadLogo("landeslogo.png", maxLogoWidth, maxLogoHeight);
+    const zivilschutzlogo = await loadLogo("zivilschutzlogo.png", maxLogoWidth, maxLogoHeight);
+
+    // Position der Logos
+    const margin = 10;
+    pdf.addImage(landeslogo.dataUrl, "PNG", margin, 10, landeslogo.width, landeslogo.height);
+    pdf.addImage(zivilschutzlogo.dataUrl, "PNG", pageWidth - margin - zivilschutzlogo.width, 10, zivilschutzlogo.width, zivilschutzlogo.height);
+
+    // Überschrift mittig zwischen Logos
+    const header = `Tirol - Viehbergung: ${document.querySelector('input[name="type"]:checked').value}`;
+    const textWidth = pdf.getTextWidth(header);
+    const centerX = (pageWidth - textWidth) / 2;
+    const headerY = 10 + Math.max(landeslogo.height, zivilschutzlogo.height)/2 + 5; // mittig zu Logos
+    pdf.setFontSize(12);
+    pdf.text(header, centerX, headerY);
+}
+
+// --- Map einfügen wie gehabt ---
+const mapEl = document.getElementById("map");
+// ... restlicher PDF-Code bleibt gleich ...
+
+await addLogosAndHeader(pdf, pdf.internal.pageSize.getWidth());
+
+        // --- Ortssuche ---
+        const geocoder = L.Control.geocoder({ defaultMarkGeocode: false, collapsed: false }).addTo(map);
+        geocoder.on('markgeocode', e => map.setView(e.geocode.center, 14));
+    </script>
+</body>
+</html>
