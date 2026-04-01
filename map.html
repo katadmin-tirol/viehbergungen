@@ -380,12 +380,7 @@ pdf.text(
 
 // Datum wieder neutral (schwarz)
 pdf.setTextColor(0, 0, 0);
-const now = new Date();
-pdf.text(
-  `Datum: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`,
-  10,
-  yText + 16
-);
+
     const now = new Date();
     pdf.text(`Datum: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, 10, yText + 16);
 
