@@ -261,7 +261,11 @@ document.getElementById("exportPDF").onclick = async () => {
     controlsToHide.forEach(el => { if (el) el.style.display = 'none'; });
 
     // Map als Canvas
-    const canvas = await html2canvas(mapEl, { useCORS: true, scale: 1, scrollY: -window.scrollY });
+const canvas = await html2canvas(mapEl, {
+  useCORS: true,
+  allowTaint: true,
+  scale: 2
+});
     controlsToHide.forEach(el => { if (el) el.style.display = ''; });
     const imgData = canvas.toDataURL("image/png");
 
@@ -275,34 +279,56 @@ document.getElementById("exportPDF").onclick = async () => {
 
     const yStart = 25; // Startpunkt unter Logos
 
-    // --- Logos als Base64 laden ---
-    function loadLogo(src) {
-      return new Promise(resolve => {
-        const img = new Image(); 
-        img.onload = () => {
-          const canvas = document.createElement("canvas");
-          canvas.width = img.width;
-          canvas.height = img.height;
-          const ctx = canvas.getContext("2d");
-          ctx.drawImage(img, 0, 0);
-          resolve(canvas.toDataURL("image/png"));
-        };
-        img.src = src;
-      });
-    }
+function loadLogo(src) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => resolve(img);  // nur Image-Objekt zurückgeben
+    img.src = src;
+  });
+}
 
-    const landeslogo = await loadLogo("landeslogo.png");
-    const zivilschutzlogo = await loadLogo("zivilschutzlogo.png");
+const landeslogo = await loadLogo("landeslogo.png");
+const zivilschutzlogo = await loadLogo("zivilschutzlogo.png");
 
     // Logos ins PDF einfügen
-    pdf.addImage(landeslogo, "PNG", 10, 10, 30, 15); 
-    pdf.addImage(zivilschutzlogo, "PNG", pdf.internal.pageSize.getWidth() - 40, 10, 30, 15);
+function addLogo(pdf, img, x, y, maxWidth, maxHeight) {
+  const ratio = Math.min(maxWidth / img.width, maxHeight / img.height);
+  const width = img.width * ratio;
+  const height = img.height * ratio;
 
-    // Map ins PDF einfügen
+  pdf.addImage(img, "PNG", x, y, width, height);
+}
+const logoWidth = 25;
+const logoHeight = 15;
+
+// Links
+addLogo(pdf, landeslogo, 10, 10, logoWidth, logoHeight);
+
+// Rechts
+addLogo(
+  pdf,
+  zivilschutzlogo,
+  pdf.internal.pageSize.getWidth() - logoWidth - 10,
+  10,
+  logoWidth,
+  logoHeight
+);
+    
+// Map ins PDF einfügen
     pdf.addImage(imgData, "PNG", 10, yStart, imgWidth, imgHeight);
 
     // Text unter der Karte
-    const yText = yStart + imgHeight + 10; 
+    const yText = yStart + imgHeight + 10;
+    pdf.setFontSize(11);
+    pdf.setFont("helvetica", "bold");
+pdf.setFontSize(16);
+
+pdf.text(
+  `Tirol - Viehbergung: ${type}`,
+  pdf.internal.pageSize.getWidth() / 2,
+  18,
+  { align: "center" }
+);
     pdf.text(`Aufnahmeort: ${points[0].lat.toFixed(5)}, ${points[0].lng.toFixed(5)} WGS84-Decimal`, 10, yText);
     pdf.text(`Ablageort:   ${points[1].lat.toFixed(5)}, ${points[1].lng.toFixed(5)} WGS84-Decimal`, 10, yText + 8);
     const now = new Date();
