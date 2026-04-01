@@ -358,8 +358,34 @@ pdf.setFontSize(12);
 
     const yText = yStart + imgHeight + 10;
     
-    pdf.text(`Aufnahmeort: ${points[0].lat.toFixed(5)}, ${points[0].lng.toFixed(5)} WGS84-Decimal`, 10, yText);
-    pdf.text(`Ablageort:   ${points[1].lat.toFixed(5)}, ${points[1].lng.toFixed(5)} WGS84-Decimal`, 10, yText + 8);
+// Schrift normal & kleiner
+pdf.setFont("helvetica", "normal");
+pdf.setFontSize(10);
+
+// Aufnahmeort (blau)
+pdf.setTextColor(0, 102, 204);
+pdf.text(
+  `Aufnahmeort: ${points[0].lat.toFixed(5)}, ${points[0].lng.toFixed(5)} WGS84-Decimal`,
+  10,
+  yText
+);
+
+// Ablageort (rot)
+pdf.setTextColor(200, 0, 0);
+pdf.text(
+  `Ablageort:   ${points[1].lat.toFixed(5)}, ${points[1].lng.toFixed(5)} WGS84-Decimal`,
+  10,
+  yText + 8
+);
+
+// Datum wieder neutral (schwarz)
+pdf.setTextColor(0, 0, 0);
+const now = new Date();
+pdf.text(
+  `Datum: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`,
+  10,
+  yText + 16
+);
     const now = new Date();
     pdf.text(`Datum: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, 10, yText + 16);
 
