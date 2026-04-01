@@ -277,7 +277,7 @@ const canvas = await html2canvas(mapEl, {
       imgHeight *= scale; 
     }
 
-    const yStart = headerHeight + 5; // Startpunkt unter Logos
+    
 
 function loadLogo(src) {
   return new Promise(resolve => {
@@ -344,22 +344,15 @@ pdf.text(
 pdf.setLineWidth(0.5);
 pdf.line(margin, headerHeight, pageWidth - margin, headerHeight);  
 
+const yStart = headerHeight + 5;
+
   
 // Map ins PDF einfügen
     pdf.addImage(imgData, "PNG", 10, yStart, imgWidth, imgHeight);
 
     // Text unter der Karte
     const yText = yStart + imgHeight + 10;
-    pdf.setFontSize(11);
-    pdf.setFont("helvetica", "bold");
-pdf.setFontSize(16);
-
-pdf.text(
-  `Tirol - Viehbergung: ${type}`,
-  pdf.internal.pageSize.getWidth() / 2,
-  18,
-  { align: "center" }
-);
+    
     pdf.text(`Aufnahmeort: ${points[0].lat.toFixed(5)}, ${points[0].lng.toFixed(5)} WGS84-Decimal`, 10, yText);
     pdf.text(`Ablageort:   ${points[1].lat.toFixed(5)}, ${points[1].lng.toFixed(5)} WGS84-Decimal`, 10, yText + 8);
     const now = new Date();
