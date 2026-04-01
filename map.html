@@ -302,9 +302,7 @@ document.getElementById("exportPDF").onclick = async () => {
     pdf.addImage(imgData, "PNG", 10, yStart, imgWidth, imgHeight);
 
     // Text unter der Karte
-    const yText = yStart + imgHeight + 10;
-    pdf.setFontSize(11);
-    pdf.text(`Tirol - Viehbergung: ${type}`, 10, 18); 
+    const yText = yStart + imgHeight + 10; 
     pdf.text(`Aufnahmeort: ${points[0].lat.toFixed(5)}, ${points[0].lng.toFixed(5)} WGS84-Decimal`, 10, yText);
     pdf.text(`Ablageort:   ${points[1].lat.toFixed(5)}, ${points[1].lng.toFixed(5)} WGS84-Decimal`, 10, yText + 8);
     const now = new Date();
