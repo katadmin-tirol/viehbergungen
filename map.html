@@ -311,7 +311,7 @@ const leftLogo = getLogoSize(landeslogo, maxLogoWidth, maxLogoHeight);
 const rightLogo = getLogoSize(zivilschutzlogo, maxLogoWidth, maxLogoHeight);
 
 // Optional: Hintergrund
-pdf.setFillColor(245, 245, 245);
+pdf.setFillColor(230, 230, 230);
 pdf.rect(0, 0, pageWidth, headerHeight, "F");
 
 // Logos (zentriert im Header)
@@ -341,7 +341,8 @@ pdf.text(
 );
 
 // Linie unter Header
-pdf.setLineWidth(0.5);
+pdf.setDrawColor(150, 150, 150);
+pdf.setLineWidth(0.2);
 pdf.line(margin, headerHeight, pageWidth - margin, headerHeight);  
 
 const yStart = headerHeight + 5;
@@ -351,6 +352,10 @@ const yStart = headerHeight + 5;
     pdf.addImage(imgData, "PNG", 10, yStart, imgWidth, imgHeight);
 
     // Text unter der Karte
+
+pdf.setFont("helvetica", "normal");
+pdf.setFontSize(10);
+
     const yText = yStart + imgHeight + 10;
     
     pdf.text(`Aufnahmeort: ${points[0].lat.toFixed(5)}, ${points[0].lng.toFixed(5)} WGS84-Decimal`, 10, yText);
