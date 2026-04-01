@@ -261,11 +261,7 @@ document.getElementById("exportPDF").onclick = async () => {
     controlsToHide.forEach(el => { if (el) el.style.display = 'none'; });
 
     // Map als Canvas
-const canvas = await html2canvas(mapEl, {
-  useCORS: true,
-  allowTaint: true,
-  scale: 2
-});
+    const canvas = await html2canvas(mapEl, { useCORS: true, scale: 1, scrollY: -window.scrollY });
     controlsToHide.forEach(el => { if (el) el.style.display = ''; });
     const imgData = canvas.toDataURL("image/png");
 
@@ -277,110 +273,40 @@ const canvas = await html2canvas(mapEl, {
       imgHeight *= scale; 
     }
 
-    
+    const yStart = 25; // Startpunkt unter Logos
 
-function loadLogo(src) {
-  return new Promise(resolve => {
-    const img = new Image();
-    img.onload = () => resolve(img);  // nur Image-Objekt zurückgeben
-    img.src = src;
-  });
-}
+    // --- Logos als Base64 laden ---
+    function loadLogo(src) {
+      return new Promise(resolve => {
+        const img = new Image(); 
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0);
+          resolve(canvas.toDataURL("image/png"));
+        };
+        img.src = src;
+      });
+    }
 
-const landeslogo = await loadLogo("landeslogo.png");
-const zivilschutzlogo = await loadLogo("zivilschutzlogo.png");
+    const landeslogo = await loadLogo("landeslogo.png");
+    const zivilschutzlogo = await loadLogo("zivilschutzlogo.png");
 
     // Logos ins PDF einfügen
-const pageWidth = pdf.internal.pageSize.getWidth();
-const margin = 10;
-const headerHeight = 25;
+    pdf.addImage(landeslogo, "PNG", 10, 10, 30, 15); 
+    pdf.addImage(zivilschutzlogo, "PNG", pdf.internal.pageSize.getWidth() - 40, 10, 30, 15);
 
-// Logo-Größe berechnen
-function getLogoSize(img, maxW, maxH) {
-  const ratio = Math.min(maxW / img.width, maxH / img.height);
-  return {
-    width: img.width * ratio,
-    height: img.height * ratio
-  };
-}
-
-const maxLogoWidth = 30;
-const maxLogoHeight = 18;
-
-const leftLogo = getLogoSize(landeslogo, maxLogoWidth, maxLogoHeight);
-const rightLogo = getLogoSize(zivilschutzlogo, maxLogoWidth, maxLogoHeight);
-
-// Optional: Hintergrund
-pdf.setFillColor(230, 230, 230);
-pdf.rect(0, 0, pageWidth, headerHeight, "F");
-
-// Logos (zentriert im Header)
-const leftY = (headerHeight - leftLogo.height) / 2;
-const rightY = (headerHeight - rightLogo.height) / 2;
-
-pdf.addImage(landeslogo, "PNG", margin, leftY, leftLogo.width, leftLogo.height);
-
-pdf.addImage(
-  zivilschutzlogo,
-  "PNG",
-  pageWidth - rightLogo.width - margin,
-  rightY,
-  rightLogo.width,
-  rightLogo.height
-);
-
-// Titel
-pdf.setFont("helvetica", "bold");
-pdf.setFontSize(16);
-
-pdf.text(
-  `Tirol - Viehbergung: ${type}`,
-  pageWidth / 2,
-  headerHeight / 2 + 2,
-  { align: "center" }
-);
-
-// Linie unter Header
-pdf.setDrawColor(150, 150, 150);
-pdf.setLineWidth(0.3);
-pdf.line(0, headerHeight, pageWidth, headerHeight);
-
-const yStart = headerHeight + 5;
-
-  
-// Map ins PDF einfügen
+    // Map ins PDF einfügen
     pdf.addImage(imgData, "PNG", 10, yStart, imgWidth, imgHeight);
 
     // Text unter der Karte
-
-pdf.setFont("helvetica", "normal");
-pdf.setFontSize(12);
-
     const yText = yStart + imgHeight + 10;
-    
-// Schrift normal & kleiner
-pdf.setFont("helvetica", "normal");
-pdf.setFontSize(10);
-
-// Aufnahmeort (blau)
-pdf.setTextColor(0, 102, 204);
-pdf.text(
-  `Aufnahmeort: ${points[0].lat.toFixed(5)}, ${points[0].lng.toFixed(5)} WGS84-Decimal`,
-  10,
-  yText
-);
-
-// Ablageort (rot)
-pdf.setTextColor(200, 0, 0);
-pdf.text(
-  `Ablageort:   ${points[1].lat.toFixed(5)}, ${points[1].lng.toFixed(5)} WGS84-Decimal`,
-  10,
-  yText + 8
-);
-
-// Datum wieder neutral (schwarz)
-pdf.setTextColor(0, 0, 0);
-
+    pdf.setFontSize(11);
+    pdf.text(`Tirol - Viehbergung: ${type}`, 10, 18); 
+    pdf.text(`Aufnahmeort: ${points[0].lat.toFixed(5)}, ${points[0].lng.toFixed(5)} WGS84-Decimal`, 10, yText);
+    pdf.text(`Ablageort:   ${points[1].lat.toFixed(5)}, ${points[1].lng.toFixed(5)} WGS84-Decimal`, 10, yText + 8);
     const now = new Date();
     pdf.text(`Datum: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, 10, yText + 16);
 
