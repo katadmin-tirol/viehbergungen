@@ -311,7 +311,7 @@ const leftLogo = getLogoSize(landeslogo, maxLogoWidth, maxLogoHeight);
 const rightLogo = getLogoSize(zivilschutzlogo, maxLogoWidth, maxLogoHeight);
 
 // Optional: Hintergrund
-pdf.setFillColor(245, 245, 245);
+pdf.setFillColor(240, 240, 240);
 pdf.rect(0, 0, pageWidth, headerHeight, "F");
 
 // Logos (zentriert im Header)
@@ -341,8 +341,8 @@ pdf.text(
 );
 
 // Linie unter Header
-pdf.setLineWidth(0.5);
-pdf.line(margin, headerHeight, pageWidth - margin, headerHeight);  
+pdf.setLineWidth(0.3);
+pdf.line(0, headerHeight, pageWidth, headerHeight);  
 
   
 // Map ins PDF einfügen
