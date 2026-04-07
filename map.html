@@ -357,16 +357,20 @@ pdf.setFontSize(11);
 
 // Aufnahmeort
 pdf.setFont("helvetica", "bold");
+pdf.setTextColor(0, 0, 255); // Blau
 pdf.text("Aufnahmeort:", 10, yText);
 
 pdf.setFont("helvetica", "normal");
+pdf.setTextColor(0, 0, 0); // zurück auf schwarz
 pdf.text(`${points[0].lat.toFixed(5)}, ${points[0].lng.toFixed(5)} WGS84-Decimal`, 50, yText);
 
 // Ablageort
 pdf.setFont("helvetica", "bold");
+pdf.setTextColor(255, 0, 0); // Rot
 pdf.text("Ablageort:", 10, yText + 8);
 
 pdf.setFont("helvetica", "normal");
+pdf.setTextColor(0, 0, 0); // wieder schwarz
 pdf.text(`${points[1].lat.toFixed(5)}, ${points[1].lng.toFixed(5)} WGS84-Decimal`, 50, yText + 8);
 
 // Datum
