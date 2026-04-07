@@ -248,6 +248,7 @@ map.on('click', function(e) {
   const type = document.querySelector('input[name="type"]:checked').value;
   const maxPoints = type === "Lebendvieh" ? 3 : 2;
 
+
   if ((points.length + (vetMarker ? 1 : 0)) >= maxPoints) {
     return alert(`Nur ${maxPoints} Punkte erlaubt (${type === "Lebendvieh" ? "inkl. Tierarzt" : ""}).`);
   }
@@ -274,6 +275,7 @@ map.on('click', function(e) {
     vetMarker = L.marker(e.latlng, { icon: greenIcon }).addTo(map);
     vetMarker.bindTooltip("Tierarzt/Tierärztin", {permanent:true, direction:"top", offset:[0,-10], className:"leaflet-tooltip-vet"}).openTooltip();
   }
+});
 
 function updateCoords() {
   let text = "";
