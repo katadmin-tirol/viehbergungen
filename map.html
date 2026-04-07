@@ -209,6 +209,8 @@ const redIcon = new L.Icon({
 
 // --- Marker & Punkte ---
 let points = [], markers = [];
+let vetMarker = null; // Marker für Tierarzt/Tierärztin
+
 
 // --- WMTS-Layer Tirol (xyz-kompatibel) ---
 const summer = L.tileLayer('https://wmts.kartetirol.at/gdi_base_summer/{z}/{x}/{y}.png', {
@@ -243,24 +245,41 @@ labels.addTo(map);
 
 // --- Marker setzen ---
 map.on('click', function(e) {
-  if (points.length >= 2) return alert("Nur zwei Punkte erlaubt (Aufnahme & Ablage).");
+  const type = document.querySelector('input[name="type"]:checked').value;
+  const maxPoints = type === "Lebendvieh" ? 3 : 2;
 
-  const label = points.length === 0 ? "Aufnahmeort" : "Ablageort";
-  const icon = points.length === 0 ? blueIcon : redIcon;
-  const className = points.length === 0 ? 'leaflet-tooltip-aufnahmeort' : 'leaflet-tooltip-ablageort';
+  if ((points.length + (vetMarker ? 1 : 0)) >= maxPoints) {
+    return alert(`Nur ${maxPoints} Punkte erlaubt (${type === "Lebendvieh" ? "inkl. Tierarzt" : ""}).`);
+  }
 
-  const marker = L.marker(e.latlng, { icon: icon }).addTo(map);
-  marker.bindTooltip(label, {permanent: true, direction: "top", offset: [0, -10], className: className}).openTooltip();
+  if (points.length < 2) {
+    // bisherige Marker (Aufnahmeort & Ablageort)
+    const label = points.length === 0 ? "Aufnahmeort" : "Ablageort";
+    const icon = points.length === 0 ? blueIcon : redIcon;
+    const className = points.length === 0 ? 'leaflet-tooltip-aufnahmeort' : 'leaflet-tooltip-ablageort';
 
-  markers.push(marker);
-  points.push(e.latlng);
-  updateCoords();
-});
+    const marker = L.marker(e.latlng, { icon: icon }).addTo(map);
+    marker.bindTooltip(label, {permanent: true, direction: "top", offset: [0, -10], className: className}).openTooltip();
+
+    markers.push(marker);
+    points.push(e.latlng);
+  } else if (type === "Lebendvieh" && !vetMarker) {
+    // Tierarzt-Marker (grün z.B.)
+    const greenIcon = new L.Icon({
+      iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
+      shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+      iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+    });
+
+    vetMarker = L.marker(e.latlng, { icon: greenIcon }).addTo(map);
+    vetMarker.bindTooltip("Tierarzt/Tierärztin", {permanent:true, direction:"top", offset:[0,-10], className:"leaflet-tooltip-vet"}).openTooltip();
+  }
 
 function updateCoords() {
   let text = "";
   const blueIconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png';
   const redIconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png';
+  const greenIconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png';
 
   if (points[0]) {
     text += `<img src="${blueIconUrl}" width="15" height="25" style="vertical-align:middle;"> 
@@ -268,7 +287,12 @@ function updateCoords() {
   }
   if (points[1]) {
     text += `<img src="${redIconUrl}" width="15" height="25" style="vertical-align:middle;"> 
-             <strong>Ablageort:</strong> ${points[1].lat.toFixed(5)}, ${points[1].lng.toFixed(5)}`;
+             <strong>Ablageort:</strong> ${points[1].lat.toFixed(5)}, ${points[1].lng.toFixed(5)}<br>`;
+  }
+  if (vetMarker) {
+    const latlng = vetMarker.getLatLng();
+    text += `<img src="${greenIconUrl}" width="15" height="25" style="vertical-align:middle;"> 
+             <strong>Tierarzt/Tierärztin:</strong> ${latlng.lat.toFixed(5)}, ${latlng.lng.toFixed(5)}`;
   }
 
   document.getElementById("coords").innerHTML = text;
@@ -278,6 +302,10 @@ document.getElementById("reset").onclick = () => {
   points = [];
   markers.forEach(m => map.removeLayer(m));
   markers = [];
+  if(vetMarker) {
+    map.removeLayer(vetMarker);
+    vetMarker = null;
+  }
   document.getElementById("coords").innerHTML = "";
 };
 
@@ -437,6 +465,17 @@ pdf.text("Ablageort:", 10, yText + 8);
 pdf.setFont("helvetica", "normal");
 pdf.setTextColor(0, 0, 0); // wieder schwarz
 pdf.text(`${points[1].lat.toFixed(5)}, ${points[1].lng.toFixed(5)} WGS84-Decimal`, 50, yText + 8);
+
+// Tierarzt/Tierärztin (nur falls gesetzt)
+if(vetMarker) {
+  const vetPos = vetMarker.getLatLng();
+  pdf.setFont("helvetica", "bold");
+  pdf.setTextColor(0, 128, 0); // grün
+  pdf.text("Tierarzt/Tierärztin:", 10, yText + 16);
+  pdf.setFont("helvetica", "normal");
+  pdf.setTextColor(0,0,0);
+  pdf.text(`${vetPos.lat.toFixed(5)}, ${vetPos.lng.toFixed(5)} WGS84-Decimal`, 50, yText + 16);
+}
 
 // Datum
 const now = new Date();
