@@ -70,11 +70,57 @@ html, body {
 body.desktop .controls button, 
 body.desktop .controls label, 
 body.desktop .layer-switch { font-size: 1em; padding: 6px 10px; }
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f0f0f0;
+  padding: 10px 20px;
+  border-bottom: 2px solid #ccc;
+}
+
+.header img {
+  height: 50px;
+}
+
+.header-title {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1.5em;
+  font-weight: bold;
+}
+
+@media (max-width: 600px) {
+  .header {
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .header-title {
+    position: static;
+    transform: none;
+    text-align: center;
+  }
+
+  .header img {
+    height: 40px;
+  }
+}
 </style>
 </head>
 <body>
 
-<h3>Tirol - Viehbergung</h3>
+<div class="header">
+  <img src="landeslogo.png" alt="Land Tirol">
+
+  <div class="header-title">
+    Tirol - Viehbergung
+  </div>
+
+  <img src="zivilschutzlogo.png" alt="Zivilschutz">
+</div>
 
 <div id="instruction">
   <strong class="instruction-title">Anleitung:</strong><br>
