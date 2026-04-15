@@ -460,7 +460,7 @@ pdf.setFontSize(11);
 
 let y = yText;
 
-const valueX = 80;
+const valueX = 75;
 
 // Aufnahmeort
 pdf.setFont("helvetica", "bold");
@@ -502,7 +502,6 @@ if (vetMarker) {
 // Datum
 const now = new Date();
 pdf.setFont("helvetica", "bold");
-pdf.setFont("helvetica", "bold");
 pdf.setTextColor(0, 0, 0);
 pdf.text("Datum:", 10, y);
 
@@ -510,7 +509,6 @@ pdf.setFont("helvetica", "normal");
 pdf.text(`${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, valueX, y);
 
 pdf.setFont("helvetica", "normal");
-pdf.text(`${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, valueX, yText + 16);
     pdf.save(`viehbergung_tirol_${type}.pdf`);
   } catch (err) {
     console.error("Fehler beim PDF-Export:", err);
