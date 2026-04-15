@@ -185,24 +185,11 @@ const map = L.map('map', {
     doubleClickZoom: false 
 });
 
-// --- Ortssuche ---
-const geocoder = L.Control.geocoder({
-  defaultMarkGeocode: false,
-  collapsed: false
-}).addTo(map);
-
-geocoder.on('markgeocode', e => {
-  map.setView(e.geocode.center, 14);
-});
-
 // Tirol-Gesamt-Bounding-Box (inkl. Osttirol)
 const tirolBounds = L.latLngBounds(
     [46.64, 10.09],
     [47.74, 12.77]
 );
-
-ortho.addTo(map);
-labels.addTo(map);
 
 map.fitBounds(tirolBounds, { padding: [20, 20]});
 
@@ -471,58 +458,61 @@ const yText = yStart + imgHeight + 10;
 // kleinere Schrift
 pdf.setFontSize(11);
 
-let y = yText;
-
 // Aufnahmeort
 pdf.setFont("helvetica", "bold");
-pdf.setTextColor(0, 0, 255);
-pdf.text("Aufnahmeort:", 10, y);
+pdf.setTextColor(0, 0, 255); // Blau
+pdf.text("Aufnahmeort:", 10, yText);
 
 pdf.setFont("helvetica", "normal");
-pdf.setTextColor(0, 0, 0);
-pdf.text(`${points[0].lat.toFixed(5)}, ${points[0].lng.toFixed(5)} WGS84-Decimal`, 50, y);
-
-y += 8;
+pdf.setTextColor(0, 0, 0); // zurück auf schwarz
+pdf.text(`${points[0].lat.toFixed(5)}, ${points[0].lng.toFixed(5)} WGS84-Decimal`, 50, yText);
 
 // Ablageort
 pdf.setFont("helvetica", "bold");
-pdf.setTextColor(255, 0, 0);
-pdf.text("Ablageort:", 10, y);
+pdf.setTextColor(255, 0, 0); // Rot
+pdf.text("Ablageort:", 10, yText + 8);
 
 pdf.setFont("helvetica", "normal");
-pdf.setTextColor(0, 0, 0);
-pdf.text(`${points[1].lat.toFixed(5)}, ${points[1].lng.toFixed(5)} WGS84-Decimal`, 50, y);
+pdf.setTextColor(0, 0, 0); // wieder schwarz
+pdf.text(`${points[1].lat.toFixed(5)}, ${points[1].lng.toFixed(5)} WGS84-Decimal`, 50, yText + 8);
 
-y += 8;
-
-// Tierarzt (optional)
-if (vetMarker) {
+// Tierarzt/Tierärztin (nur falls gesetzt)
+if(vetMarker) {
   const vetPos = vetMarker.getLatLng();
-
   pdf.setFont("helvetica", "bold");
-  pdf.setTextColor(0, 128, 0);
-  pdf.text("Aufnahmeort Tierarzt/Tierärztin:", 10, y);
-
+  pdf.setTextColor(0, 128, 0); // grün
+  pdf.text("Aufnahmeort Tierarzt/Tierärztin:", 10, yText + 16);
   pdf.setFont("helvetica", "normal");
-  pdf.setTextColor(0, 0, 0);
-  pdf.text(`${vetPos.lat.toFixed(5)}, ${vetPos.lng.toFixed(5)} WGS84-Decimal`, 50, y);
-
-  y += 8;
+  pdf.setTextColor(0,0,0);
+  pdf.text(`${vetPos.lat.toFixed(5)}, ${vetPos.lng.toFixed(5)} WGS84-Decimal`, 50, yText + 16);
 }
 
 // Datum
 const now = new Date();
-
 pdf.setFont("helvetica", "bold");
-pdf.setTextColor(0, 0, 0);
-pdf.text("Datum:", 10, y);
+pdf.text("Datum:", 10, yText + 16);
 
 pdf.setFont("helvetica", "normal");
-pdf.text(`${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, 50, y);
+pdf.text(`${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, 50, yText + 16);
 
+pdf.setFont("helvetica", "normal");
+pdf.text(`${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, 50, yText + 16);
+    pdf.save(`viehbergung_tirol_${type}.pdf`);
+  } catch (err) {
+    console.error("Fehler beim PDF-Export:", err);
+    alert("Fehler beim Erstellen des PDFs. Details siehe Konsole.");
+  } finally {
+    mapEl.style.height = originalHeight;
+    map.invalidateSize();
+    map.setView(originalView, originalZoom);
+  }
 };
 
 
+
+// --- Ortssuche ---
+const geocoder = L.Control.geocoder({defaultMarkGeocode:false, collapsed:false}).addTo(map);
+geocoder.on('markgeocode', e => map.setView(e.geocode.center, 14));
 </script>
 
 <!-- FOOTER -->
