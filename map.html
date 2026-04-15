@@ -201,6 +201,9 @@ const tirolBounds = L.latLngBounds(
     [47.74, 12.77]
 );
 
+ortho.addTo(map);
+labels.addTo(map);
+
 map.fitBounds(tirolBounds, { padding: [20, 20]});
 
 
