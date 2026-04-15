@@ -494,6 +494,9 @@ pdf.text("Datum:", 10, yText + 16);
 
 pdf.setFont("helvetica", "normal");
 pdf.text(`${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, 50, yText + 16);
+
+pdf.setFont("helvetica", "normal");
+pdf.text(`${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, 50, yText + 16);
     pdf.save(`viehbergung_tirol_${type}.pdf`);
   } catch (err) {
     console.error("Fehler beim PDF-Export:", err);
