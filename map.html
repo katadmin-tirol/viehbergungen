@@ -262,6 +262,7 @@ map.on('click', function(e) {
 
     markers.push(marker);
     points.push(e.latlng);
+updateCoords();
   } else if (type === "Lebendvieh" && !vetMarker) {
     // Tierarzt-Marker (grün z.B.)
     const greenIcon = new L.Icon({
@@ -272,6 +273,7 @@ map.on('click', function(e) {
 
     vetMarker = L.marker(e.latlng, { icon: greenIcon }).addTo(map);
     vetMarker.bindTooltip("Tierarzt/Tierärztin", {permanent:true, direction:"top", offset:[0,-10], className:"leaflet-tooltip-vet"}).openTooltip();
+updateCoords();
   }
 });
 
