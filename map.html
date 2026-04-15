@@ -22,6 +22,7 @@ html, body {
   
 .highlight-red { color: red; font-weight: bold; }
 .highlight-blue { color: blue; font-weight: bold; }
+.highlight-green { color: green; font-weight: bold; }
 
 #map { height: 60vh; width: 100%; touch-action: none; }
 
@@ -340,9 +341,15 @@ document.getElementById("exportPDF").onclick = async () => {
   const originalView = map.getCenter();
   const originalZoom = map.getZoom();
 
-  const bounds = L.latLngBounds(points);
-  const pdfWidth = pdf.internal.pageSize.getWidth() - 20;
-  const pdfHeight = pdf.internal.pageSize.getHeight() - 50;
+  const allPoints = [...points];
+if (vetMarker) {
+  allPoints.push(vetMarker.getLatLng());
+}
+
+const bounds = L.latLngBounds(allPoints);
+
+const pdfWidth = pdf.internal.pageSize.getWidth() - 20;
+const pdfHeight = pdf.internal.pageSize.getHeight() - 50;
 
   // Karte vergrößern für bessere Qualität
   mapEl.style.height = (isMobile ? pdfHeight * window.devicePixelRatio : pdfHeight * 5) + "px";
