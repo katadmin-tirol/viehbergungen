@@ -57,6 +57,7 @@ html, body {
 /* Tooltip-Farben */
 .leaflet-tooltip-aufnahmeort { color: blue; font-weight: bold; }
 .leaflet-tooltip-ablageort { color: red; font-weight: bold; }
+.leaflet-tooltip-vet { color: green; font-weight: bold; }
 
 /* Mobile Optimierung */
 @media (max-width: 768px) {
@@ -143,7 +144,7 @@ body.desktop .layer-switch { font-size: 1em; padding: 6px 10px; }
   <strong class="instruction-title">Anleitung:</strong><br>
   1. Navigieren Sie zum <strong>passenden Kartenausschnitt</strong>. Nutzen Sie ggf. die Suchleiste (Eingabe + Enter). Über die Auswahlbox können Sie die Hintergrundkarte bei Bedarf ändern.<br>
   2. Wählen Sie aus, ob es sich um eine <strong>Lebendvieh- oder Kadaverbergung</strong> handelt.<br>
-  3. Klicken Sie auf die Karte, um <strong>zuerst den</strong> <span class="highlight-blue">Aufnahmeort</span> und <strong>anschließend den</strong> <span class="highlight-red">Ablageort</span> zu markieren (max. 2 Punkte). Falls Sie falsche Punkte ausgewählt haben, klicken Sie auf "Zurücksetzen".<br>
+  3. Klicken Sie auf die Karte, um <strong>zuerst den</strong> <span class="highlight-blue">Aufnahmeort</span> und <strong>anschließend den</strong> <span class="highlight-red">Ablageort</span> zu markieren. Setzen Sie bei einer Lebendviehbergung zusätzlich den <span class="highlight-green">Aufnahmeort des Tierarztes/der Tierärztin</span>. Falls Sie falsche Punkte ausgewählt haben, klicken Sie auf "Zurücksetzen".<br>
   4. Klicken Sie auf <strong>"Als PDF exportieren"</strong>, um die Karte zu speichern.<br>
 </div>
 
@@ -272,7 +273,7 @@ updateCoords();
     });
 
     vetMarker = L.marker(e.latlng, { icon: greenIcon }).addTo(map);
-    vetMarker.bindTooltip("Tierarzt/Tierärztin", {permanent:true, direction:"top", offset:[0,-10], className:"leaflet-tooltip-vet"}).openTooltip();
+    vetMarker.bindTooltip("Aufnahmeort Tierarzt/Tierärztin", {permanent:true, direction:"top", offset:[0,-10], className:"leaflet-tooltip-vet"}).openTooltip();
 updateCoords();
   }
 });
@@ -294,7 +295,7 @@ function updateCoords() {
   if (vetMarker) {
     const latlng = vetMarker.getLatLng();
     text += `<img src="${greenIconUrl}" width="15" height="25" style="vertical-align:middle;"> 
-             <strong>Tierarzt/Tierärztin:</strong> ${latlng.lat.toFixed(5)}, ${latlng.lng.toFixed(5)}`;
+             <strong>Aufnahmeort Tierarzt/Tierärztin:</strong> ${latlng.lat.toFixed(5)}, ${latlng.lng.toFixed(5)}`;
   }
 
   document.getElementById("coords").innerHTML = text;
@@ -473,7 +474,7 @@ if(vetMarker) {
   const vetPos = vetMarker.getLatLng();
   pdf.setFont("helvetica", "bold");
   pdf.setTextColor(0, 128, 0); // grün
-  pdf.text("Tierarzt/Tierärztin:", 10, yText + 16);
+  pdf.text("Aufnahmeort Tierarzt/Tierärztin:", 10, yText + 16);
   pdf.setFont("helvetica", "normal");
   pdf.setTextColor(0,0,0);
   pdf.text(`${vetPos.lat.toFixed(5)}, ${vetPos.lng.toFixed(5)} WGS84-Decimal`, 50, yText + 16);
