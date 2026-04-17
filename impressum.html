@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Impressum</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+}
+
+/* HEADER wie auf Hauptseite */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f0f0f0;
+  padding: 10px 20px;
+  border-bottom: 2px solid #ccc;
+}
+
+.header img {
+  height: 50px;
+}
+
+.header-title {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1.5em;
+  font-weight: bold;
+}
+
+/* Inhalt */
+.content {
+  padding: 20px;
+}
+
+h1 {
+  margin-bottom: 10px;
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  .header {
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .header-title {
+    position: static;
+    transform: none;
+    text-align: center;
+  }
+
+  .header img {
+    height: 40px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <img src="landeslogo.png" alt="Land Tirol">
+
+  <div class="header-title">
+    Tirol - Viehbergung
+  </div>
+
+  <!-- rechts leer (für gleiche Optik wie Hauptseite) -->
+  <div style="width:50px;"></div>
+</div>
+
+<!-- INHALT -->
+<div class="content">
+
+<h1>Impressum</h1>
+<h2> Medieninhaber und Herausgeber<br>
+Land Tirol</h2>
+<p>
+Amt der Tiroler Landesregierung<br>
+Eduard-Wallnöfer-Platz 3, 6020 Innsbruck<br>
++43 512 508<br>
+post@tirol.gv.at<br>
+<a href="https://www.tirol.gv.at/">www.tirol.gv.at</a> <br>
+<br>
+Redaktion: Abteilung Krisen- und Gefahrenmanagement<br>
++43 512 508 2692<br>
+krisenmanagement@tirol.gv.at<br>
+<a href="https://www.tirol.gv.at/sicherheit/kkm/krisen-und-gefahrenmanagement/">www.tirol.gv.at/sicherheit/kkm/krisen-und-gefahrenmanagement/</a> <br>
+
+<br>
+UID ATU 36970505<br>
+</p>
+<h3>Karten- und Geodatenquellen</h3>
+<p>
+© Land Tirol
+</p>
+<h3>Weitere verwendete Bibliotheken und Dienste</h3>
+<p>
+Leaflet Bibliothek: © 2010-2026 Vladimir Agafonkin, © 2010-2011 CloudMade, <a href="https://github.com/Leaflet/Leaflet/blob/main/LICENSE">BSD 2-Clause License</a><br>
+Leaflet Control Geocoder: © 2012 sa3m, © 2013 Per Liedman, <a href="https://github.com/perliedman/leaflet-control-geocoder/blob/master/LICENSE">BSD 2-Clause License</a><br>
+Leaflet Browser Print:  © 2017 Igor Vladyka, <a href="https://github.com/Igor-Vladyka/leaflet.browser.print/blob/master/LICENSE">MIT License</a><br>
+Leaflet Color Markers: © 2010-2019 Vladimir Agafonkin, © 2010-2011 CloudMade, © 2013-2020 Thomas Pointhuber, <a href="https://github.com/pointhi/leaflet-color-markers/blob/master/LICENSE">BSD 2-Clause License</a><br>
+html2canvas: © 2012 Niklas von Hertzen, <a href="https://github.com/niklasvh/html2canvas/blob/master/LICENSE">MIT License</a><br>
+jsPDF: © 2010-2025 James Hall, © 2015-2025 yWorks GmbH, <a href="https://github.com/parallax/jsPDF/blob/master/LICENSE">MIT License</a>
+</p>
+
+<h3>Datenschutzhinweis</h3>
+<p>
+Diese Anwendung verwendet Kartenmaterial des Landes Tirol, den Geocoding-Dienst OpenStreetMap (Nominatim) und es werden externe Inhalte über Content Delivery Networks (CDN) geladen. Dabei können insbesondere IP-Adresse und technische Verbindungsdaten an die jeweiligen Anbieter übermittelt werden.
+</p>
+
+<a href="index.html">← Zurück zur Karte</a>
+
+</div>
+
+</body>
+</html>
