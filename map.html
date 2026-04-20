@@ -210,7 +210,7 @@ const redIcon = new L.Icon({
 // --- Marker & Punkte ---
 let points = [], markers = [];
 let vetMarker = null; // Marker für Tierarzt/Tierärztin
-let bezirkeLayer;
+
 
 // --- WMTS-Layer Tirol (xyz-kompatibel) ---
 const summer = L.tileLayer('https://wmts.kartetirol.at/gdi_base_summer/{z}/{x}/{y}.png', {
@@ -230,8 +230,6 @@ const ortho = L.tileLayer('https://wmts.kartetirol.at/gdi_ortho/{z}/{x}/{y}.png'
 
 // --- Label-Layer immer unter Marker ---
 map.createPane('labelPane');
-map.createPane('bezirkePane');
-map.getPane('bezirkePane').style.zIndex = 450;
 map.getPane('labelPane').style.zIndex = 400; // unter MarkerPane (500)
 map.getPane('labelPane').style.pointerEvents = 'none';
 
@@ -244,28 +242,6 @@ const labels = L.tileLayer('https://wmts.kartetirol.at/gdi_nomenklatur/{z}/{x}/{
   crossOrigin: true
 });
 labels.addTo(map);
-
-// --- Bezirksgrenzen laden ---
-fetch('Bezirke_2.geojson')
-  .then(response => response.json())
-  .then(data => {
-    bezirkeLayer = L.geoJSON(data, {
-      pane: 'bezirkePane',
-      style: {
-        color: '#000',
-        weight: 2,
-        fill: false
-      },
-      onEachFeature: function (feature, layer) {
-        if (feature.properties && feature.properties.name) {
-          layer.bindTooltip(feature.properties.name);
-        }
-      }
-    });
-
-    bezirkeLayer.addTo(map);
-  })
-  .catch(err => console.error("Fehler beim Laden der GeoJSON:", err));
 
 // --- Marker setzen ---
 map.on('click', function(e) {
@@ -352,8 +328,6 @@ document.getElementById("layerSwitch").addEventListener('change', (e) => {
   labels.addTo(map);
   markers.forEach(m => m.addTo(map));
 });
-
-if (bezirkeLayer) bezirkeLayer.addTo(map);
 
 // --- PDF Export ---
 document.getElementById("exportPDF").onclick = async () => {
