@@ -167,6 +167,7 @@ body.desktop .layer-switch { font-size: 1em; padding: 6px 10px; }
 
 <!-- Skripte -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/esri-leaflet/dist/esri-leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -241,7 +242,15 @@ const labels = L.tileLayer('https://wmts.kartetirol.at/gdi_nomenklatur/{z}/{x}/{
   attribution: '© Land Tirol (Labels)',
   crossOrigin: true
 });
-labels.addTo(map);
+
+// --- ArcGIS Zusatzlayer (Grenzen, Flurnamen etc.) ---
+const orthoLabelsArcGIS = L.esri.dynamicMapLayer({
+  url: 'https://gis.tirol.gv.at/arcgis/rest/services/Basis/basis_ortho_label/MapServer',
+layers: [1,2,3,23,24,25,26,27],  
+pane: 'labelPane',
+  opacity: 1
+});
+
 
 // --- Marker setzen ---
 map.on('click', function(e) {
@@ -316,14 +325,22 @@ document.getElementById("reset").onclick = () => {
 // --- Standard: Orthofoto aktiv ---
 ortho.addTo(map);
 labels.addTo(map);
+orthoLabelsArcGIS.addTo(map);
 
 document.getElementById("layerSwitch").addEventListener('change', (e) => {
   const value = e.target.value;
+
   map.removeLayer(summer);
   map.removeLayer(ortho);
+  map.removeLayer(orthoLabelsArcGIS); // <-- neu
 
-  if (value === 'summer') summer.addTo(map);
-  else if (value === 'ortho') ortho.addTo(map);
+  if (value === 'summer') {
+    summer.addTo(map);
+    orthoLabelsArcGIS.addTo(map);
+  } else if (value === 'ortho') {
+    ortho.addTo(map);
+    orthoLabelsArcGIS.addTo(map);
+  }
 
   labels.addTo(map);
   markers.forEach(m => m.addTo(map));
