@@ -246,18 +246,11 @@ const labels = L.tileLayer('https://wmts.kartetirol.at/gdi_nomenklatur/{z}/{x}/{
 // --- ArcGIS Zusatzlayer (Grenzen, Flurnamen etc.) ---
 const orthoLabelsArcGIS = L.esri.dynamicMapLayer({
   url: 'https://gis.tirol.gv.at/arcgis/rest/services/Basis/basis_ortho_label/MapServer',
-layers: [1,2,3,23,24,25,26,27],  
+layers: [0,1,2,3,22,23,24,25,26,27],  
 pane: 'labelPane',
   opacity: 1
 });
 
-// --- ArcGIS Zusatzlayer (Bezirke) ---
-const basisLayer1 = L.esri.dynamicMapLayer({
-  url: 'https://gis.tirol.gv.at/arcgis/rest/services/Basis/basis_overview/MapServer',
-  layers: [1],   // <-- genau dein Layer 1
-  opacity: 0.8,
-  pane: 'labelPane'
-});
 
 // --- Marker setzen ---
 map.on('click', function(e) {
@@ -333,7 +326,6 @@ document.getElementById("reset").onclick = () => {
 ortho.addTo(map);
 labels.addTo(map);
 orthoLabelsArcGIS.addTo(map);
-basisOverview.addTo(map);
 
 document.getElementById("layerSwitch").addEventListener('change', (e) => {
   const value = e.target.value;
