@@ -251,6 +251,13 @@ pane: 'labelPane',
   opacity: 1
 });
 
+// --- ArcGIS Zusatzlayer (Bezirke) ---
+const basisLayer1 = L.esri.dynamicMapLayer({
+  url: 'https://gis.tirol.gv.at/arcgis/rest/services/Basis/basis_overview/MapServer',
+  layers: [1],   // <-- genau dein Layer 1
+  opacity: 0.8,
+  pane: 'labelPane'
+});
 
 // --- Marker setzen ---
 map.on('click', function(e) {
@@ -326,6 +333,7 @@ document.getElementById("reset").onclick = () => {
 ortho.addTo(map);
 labels.addTo(map);
 orthoLabelsArcGIS.addTo(map);
+basisOverview.addTo(map);
 
 document.getElementById("layerSwitch").addEventListener('change', (e) => {
   const value = e.target.value;
