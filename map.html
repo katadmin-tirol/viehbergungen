@@ -193,6 +193,7 @@ const tirolBounds = L.latLngBounds(
 );
 
 map.fitBounds(tirolBounds, { padding: [20, 20]});
+map.setZoom(map.getZoom() + 1); // +1 = näher reinzoomen
 
 
 
