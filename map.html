@@ -190,7 +190,7 @@ const map = L.map('map', {
     doubleClickZoom: false 
 });
 
-// Tirol-Gesamt-Bounding-Box (inkl. Osttirol)
+// Tirol-Gesamt-Bounding-Box
 const tirolBounds = L.latLngBounds(
     [46.64, 10.09],
     [47.74, 12.77]
@@ -459,7 +459,7 @@ pdf.setFont("helvetica", "bold");
 pdf.setFontSize(16);
 
 pdf.text(
-  `Tirol - Viehbergung: ${type}`,
+  `Kartenerstellung Viehbergungen: ${type}`,
   pageWidth / 2,
   headerHeight / 2 + 2,
   { align: "center" }
