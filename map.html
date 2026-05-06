@@ -389,7 +389,7 @@ const pdfHeight = pdf.internal.pageSize.getHeight() - 50;
 const canvas = await html2canvas(mapEl, {
   useCORS: true,
   allowTaint: true,
-  scale: 2
+  scale: 1
 });
     controlsToHide.forEach(el => { if (el) el.style.display = ''; });
     const imgData = canvas.toDataURL("image/jpeg", 0.5);
