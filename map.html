@@ -374,7 +374,7 @@ const pdfWidth = pdf.internal.pageSize.getWidth() - 20;
 const pdfHeight = pdf.internal.pageSize.getHeight() - 50;
 
   // Karte vergrößern für bessere Qualität
-  mapEl.style.height = pdfHeight + "px";
+  mapEl.style.height = (isMobile ? pdfHeight * window.devicePixelRatio : pdfHeight * 5) + "px";
   map.invalidateSize();
   map.fitBounds(bounds, { padding: [80, 80] });
   map.invalidateSize();
@@ -389,7 +389,7 @@ const pdfHeight = pdf.internal.pageSize.getHeight() - 50;
 const canvas = await html2canvas(mapEl, {
   useCORS: true,
   allowTaint: true,
-  scale: 1
+  scale: 2
 });
     controlsToHide.forEach(el => { if (el) el.style.display = ''; });
     const imgData = canvas.toDataURL("image/jpeg", 0.5);
