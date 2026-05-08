@@ -354,15 +354,15 @@ document.getElementById("layerSwitch").addEventListener('change', (e) => {
   map.removeLayer(gemeindegrenzen);
 
   if (value === 'summer') {
-  summer.addTo(map);
-  gemeindegrenzen.addTo(map);
-  orthoLabelsArcGIS.addTo(map);
-}
+    summer.addTo(map);
+    gemeindegrenzen.addTo(map);
+    orthoLabelsArcGIS.addTo(map);
+
   } else if (value === 'ortho') {
-  ortho.addTo(map);
-  gemeindegrenzen.addTo(map);
-  orthoLabelsArcGIS.addTo(map);
-}
+    ortho.addTo(map);
+    gemeindegrenzen.addTo(map);
+    orthoLabelsArcGIS.addTo(map);
+  }
 
   labels.addTo(map);
   markers.forEach(m => m.addTo(map));
