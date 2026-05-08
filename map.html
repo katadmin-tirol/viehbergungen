@@ -235,15 +235,11 @@ const ortho = L.tileLayer('https://wmts.kartetirol.at/gdi_ortho/{z}/{x}/{y}.png'
 });
 	
 // --- Gemeindegrenzen Tirol ---
-const gemeindegrenzen = L.tileLayer.wms(
-  'https://gis.tirol.gv.at/arcgis/services/service_public/verwaltungsgrenzen/MapServer/WMSServer',
-  {
-    layers: '1',
-    format: 'image/png',
-    transparent: true,
-    attribution: '© Land Tirol'
-  }
-);
+const gemeindegrenzen = L.esri.dynamicMapLayer({
+  url: "https://gis.tirol.gv.at/arcgis/rest/services/Service_Public/ogd_basis/MapServer",
+  layers: [45],
+  opacity: 1
+});
 	
 
 // --- Label-Layer immer unter Marker ---
