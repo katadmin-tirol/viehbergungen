@@ -233,6 +233,18 @@ const ortho = L.tileLayer('https://wmts.kartetirol.at/gdi_ortho/{z}/{x}/{y}.png'
   attribution: '© Land Tirol',
   crossOrigin: true
 });
+	
+// --- Gemeindegrenzen Tirol ---
+const gemeindegrenzen = L.tileLayer.wms(
+  'https://gis.tirol.gv.at/arcgis/services/service_public/verwaltungsgrenzen/MapServer/WMSServer',
+  {
+    layers: '0',
+    format: 'image/png',
+    transparent: true,
+    attribution: '© Land Tirol'
+  }
+);
+	
 
 // --- Label-Layer immer unter Marker ---
 map.createPane('labelPane');
@@ -329,6 +341,7 @@ document.getElementById("reset").onclick = () => {
 
 // --- Standard: Basiskarte aktiv ---
 summer.addTo(map);
+gemeindegrenzen.addTo(map);
 labels.addTo(map);
 orthoLabelsArcGIS.addTo(map);
 
@@ -337,15 +350,19 @@ document.getElementById("layerSwitch").addEventListener('change', (e) => {
 
   map.removeLayer(summer);
   map.removeLayer(ortho);
-  map.removeLayer(orthoLabelsArcGIS); // <-- neu
+  map.removeLayer(orthoLabelsArcGIS);
+  map.removeLayer(gemeindegrenzen);
 
   if (value === 'summer') {
-    summer.addTo(map);
-    orthoLabelsArcGIS.addTo(map);
+  summer.addTo(map);
+  gemeindegrenzen.addTo(map);
+  orthoLabelsArcGIS.addTo(map);
+}
   } else if (value === 'ortho') {
-    ortho.addTo(map);
-    orthoLabelsArcGIS.addTo(map);
-  }
+  ortho.addTo(map);
+  gemeindegrenzen.addTo(map);
+  orthoLabelsArcGIS.addTo(map);
+}
 
   labels.addTo(map);
   markers.forEach(m => m.addTo(map));
