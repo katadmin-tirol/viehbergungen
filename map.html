@@ -159,8 +159,8 @@ Die aktuellen Anforderungsformulare für Viehbergungen finden Sie <a href="https
   <button id="reset">Zurücksetzen</button>
   <button id="exportPDF">Als PDF exportieren</button>
   <select id="layerSwitch" class="layer-switch">
-<option value="ortho" selected>Orthophoto</option>
-  <option value="summer">Basiskarte</option>
+<option value="ortho">Orthophoto</option>
+  <option value="summer" selected>Basiskarte</option>
 
 </select>
 
@@ -327,8 +327,8 @@ document.getElementById("reset").onclick = () => {
   document.getElementById("coords").innerHTML = "";
 };
 
-// --- Standard: Orthofoto aktiv ---
-ortho.addTo(map);
+// --- Standard: Basiskarte aktiv ---
+summer.addTo(map);
 labels.addTo(map);
 orthoLabelsArcGIS.addTo(map);
 
