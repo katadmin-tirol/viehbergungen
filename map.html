@@ -369,7 +369,12 @@ document.getElementById("exportPDF").onclick = async () => {
   if (points.length < 2) return alert("Bitte zwei Punkte setzen.");
   const type = document.querySelector('input[name="type"]:checked').value;
   const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF({ orientation: isMobile ? "portrait" : "landscape", unit: "mm", format: "a4" });
+  const pdf = new jsPDF({
+  orientation: isMobile ? "portrait" : "landscape",
+  unit: "mm",
+  format: "a4",
+  compress: true
+});
 
   const mapEl = document.getElementById("map");
   const originalHeight = mapEl.style.height;
