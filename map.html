@@ -402,7 +402,7 @@ const pdfHeight = pdf.internal.pageSize.getHeight() - 50;
 const canvas = await html2canvas(mapEl, {
   useCORS: true,
   allowTaint: true,
-  scale: 2
+  scale: 1
 });
     controlsToHide.forEach(el => { if (el) el.style.display = ''; });
     const imgData = canvas.toDataURL("image/jpeg", 0.5);
@@ -484,7 +484,8 @@ pdf.line(0, headerHeight, pageWidth, headerHeight);
 
   
 // Map ins PDF einfügen
-    pdf.addImage(imgData, "PNG", 10, yStart, imgWidth, imgHeight);
+	const imgData = canvas.toDataURL("image/jpeg", 0.3);
+    pdf.addImage(imgData, "JPEG", 10, yStart, imgWidth, imgHeight);
 
 
 // Text unter der Karte
