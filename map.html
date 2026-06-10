@@ -369,10 +369,11 @@ document.getElementById("exportPDF").onclick = async () => {
   if (points.length < 2) return alert("Bitte zwei Punkte setzen.");
   const type = document.querySelector('input[name="type"]:checked').value;
   const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF({
+const pdf = new jsPDF({
   orientation: isMobile ? "portrait" : "landscape",
   unit: "mm",
   format: "a4",
+  compress: true
 });
 
   const mapEl = document.getElementById("map");
@@ -391,7 +392,7 @@ const pdfWidth = pdf.internal.pageSize.getWidth() - 20;
 const pdfHeight = pdf.internal.pageSize.getHeight() - 50;
 
   // Karte vergrößern für bessere Qualität
-  mapEl.style.height = isMobile ? "700px" : "800px";
+  mapEl.style.height = (isMobile ? pdfHeight * window.devicePixelRatio : pdfHeight * 5) + "px";
   map.invalidateSize();
   map.fitBounds(bounds, { padding: [80, 80] });
   map.invalidateSize();
