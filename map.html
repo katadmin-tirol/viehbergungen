@@ -364,6 +364,29 @@ document.getElementById("layerSwitch").addEventListener('change', (e) => {
   markers.forEach(m => m.addTo(map));
 });
 
+function waitUntilMapIdle(map) {
+    return new Promise(resolve => {
+
+        function check() {
+            let loading = false;
+
+            map.eachLayer(layer => {
+                if (layer._loading) {
+                    loading = true;
+                }
+            });
+
+            if (!loading) {
+                resolve();
+            } else {
+                setTimeout(check, 200);
+            }
+        }
+
+        check();
+    });
+}
+
 // --- PDF Export ---
 document.getElementById("exportPDF").onclick = async () => {
   if (points.length < 2) return alert("Bitte zwei Punkte setzen.");
@@ -392,11 +415,19 @@ const pdfWidth = pdf.internal.pageSize.getWidth() - 20;
 const pdfHeight = pdf.internal.pageSize.getHeight() - 50;
 
   // Karte vergrößern für bessere Qualität
-  mapEl.style.height = (isMobile ? pdfHeight * window.devicePixelRatio : pdfHeight * 5) + "px";
-  map.invalidateSize();
-  map.fitBounds(bounds, { padding: [80, 80] });
-  map.invalidateSize();
-  await new Promise(r => setTimeout(r, 1000));
+mapEl.style.height = (isMobile ? pdfHeight * window.devicePixelRatio : pdfHeight * 5) + "px";
+map.invalidateSize();
+
+map.fitBounds(bounds, { padding: [80, 80] });
+
+await new Promise(resolve => {
+    map.once('moveend', resolve);
+});
+
+await waitUntilMapIdle(map);
+
+// kleiner Sicherheitspuffer
+await new Promise(r => setTimeout(r, 500));
 
   try {
     // Zoom-/Geocoder-Steuerelemente ausblenden
