@@ -534,6 +534,40 @@ function updateCoords() {
 
   document.getElementById("coords").innerHTML = text;
 }
+// =====================================================
+// Tierarzt-Koordinaten bei Kadaverbergung ausblenden
+// =====================================================
+
+function updateVetCoordinateVisibility() {
+  const type = document.querySelector('input[name="type"]:checked').value;
+  const vetRow = document.querySelector('.vet-coordinate-row');
+
+  if (type === "Lebendvieh") {
+    vetRow.style.display = "";
+  } else {
+    vetRow.style.display = "none";
+
+    // Falls bereits ein Tierarzt-Marker vorhanden ist, entfernen
+    if (vetMarker) {
+      map.removeLayer(vetMarker);
+      vetMarker = null;
+      updateCoords();
+    }
+
+    // Eingabefelder leeren
+    document.getElementById("vetLat").value = "";
+    document.getElementById("vetLng").value = "";
+  }
+}
+
+
+// Beim Wechsel zwischen Lebendvieh und Kadaver ausführen
+document.querySelectorAll('input[name="type"]').forEach(radio => {
+  radio.addEventListener("change", updateVetCoordinateVisibility);
+});
+
+// Beim Start den richtigen Zustand herstellen
+updateVetCoordinateVisibility();
 
 // =====================================================
 // Punkte über WGS84-Koordinaten einzeln setzen
