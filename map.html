@@ -127,6 +127,62 @@ body.desktop .layer-switch { font-size: 1em; padding: 6px 10px; }
     height: 40px;
   }
 }
+.coordinate-input {
+  margin: 10px;
+  padding: 12px;
+  background: #f7f7f7;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.coordinate-input > strong {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 1.1em;
+}
+
+.coordinate-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.coordinate-row label {
+  flex: 1 1 250px;
+  font-size: 1em;
+}
+
+.coordinate-row input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px;
+  margin-top: 4px;
+  font-size: 1em;
+}
+
+.coordinate-input button {
+  font-size: 1em;
+  padding: 8px 12px;
+  cursor: pointer;
+  margin-top: 5px;
+}
+
+.coordinate-input small {
+  display: block;
+  margin-top: 8px;
+  color: #555;
+}
+
+@media (max-width: 768px) {
+  .coordinate-row {
+    flex-direction: column;
+  }
+
+  .coordinate-row label {
+    width: 100%;
+  }
+}
 </style>
 </head>
 <body>
@@ -164,6 +220,52 @@ Die aktuellen Anforderungsformulare für Viehbergungen finden Sie <a href="https
 
 </select>
 
+</div>
+	
+<div class="coordinate-input">
+  <strong>Punkte über Koordinaten setzen (WGS84 – Dezimalgrad)</strong>
+
+  <div class="coordinate-row">
+    <label>
+      Aufnahmeort – Breitengrad:
+      <input type="number" id="aufnahmeLat" step="0.00001" placeholder="z. B. 47.26921">
+    </label>
+
+    <label>
+      Aufnahmeort – Längengrad:
+      <input type="number" id="aufnahmeLng" step="0.00001" placeholder="z. B. 11.40410">
+    </label>
+  </div>
+
+  <div class="coordinate-row">
+    <label>
+      Ablageort – Breitengrad:
+      <input type="number" id="ablageLat" step="0.00001" placeholder="z. B. 47.26500">
+    </label>
+
+    <label>
+      Ablageort – Längengrad:
+      <input type="number" id="ablageLng" step="0.00001" placeholder="z. B. 11.41000">
+    </label>
+  </div>
+
+  <div class="coordinate-row vet-coordinate-row">
+    <label>
+      Tierarzt/Tierärztin – Breitengrad:
+      <input type="number" id="vetLat" step="0.00001" placeholder="z. B. 47.27000">
+    </label>
+
+    <label>
+      Tierarzt/Tierärztin – Längengrad:
+      <input type="number" id="vetLng" step="0.00001" placeholder="z. B. 11.40500">
+    </label>
+  </div>
+
+  <button id="setCoordinates">Koordinaten setzen</button>
+
+  <small>
+    Eingabeformat: WGS84-Dezimalgrad, z. B. 47.26921 / 11.40410
+  </small>
 </div>
 
 <div id="map"></div>
@@ -323,17 +425,199 @@ function updateCoords() {
 
   document.getElementById("coords").innerHTML = text;
 }
+	// --- Punkte über WGS84-Koordinaten setzen ---
+document.getElementById("setCoordinates").onclick = () => {
 
-document.getElementById("reset").onclick = () => {
+  const type = document.querySelector('input[name="type"]:checked').value;
+
+  // Eingabefelder auslesen
+  const aufnahmeLat = parseFloat(document.getElementById("aufnahmeLat").value);
+  const aufnahmeLng = parseFloat(document.getElementById("aufnahmeLng").value);
+
+  const ablageLat = parseFloat(document.getElementById("ablageLat").value);
+  const ablageLng = parseFloat(document.getElementById("ablageLng").value);
+
+  const vetLat = parseFloat(document.getElementById("vetLat").value);
+  const vetLng = parseFloat(document.getElementById("vetLng").value);
+
+
+  // Funktion zur Prüfung von Koordinaten
+  function validCoordinate(lat, lng) {
+    return (
+      Number.isFinite(lat) &&
+      Number.isFinite(lng) &&
+      lat >= -90 &&
+      lat <= 90 &&
+      lng >= -180 &&
+      lng <= 180
+    );
+  }
+
+
+  // Aufnahmeort prüfen
+  if (!validCoordinate(aufnahmeLat, aufnahmeLng)) {
+    return alert(
+      "Bitte gültige Koordinaten für den Aufnahmeort eingeben.\n\n" +
+      "Beispiel: 47.26921 / 11.40410"
+    );
+  }
+
+
+  // Ablageort prüfen
+  if (!validCoordinate(ablageLat, ablageLng)) {
+    return alert(
+      "Bitte gültige Koordinaten für den Ablageort eingeben.\n\n" +
+      "Beispiel: 47.26500 / 11.41000"
+    );
+  }
+
+
+  // Bei Lebendvieh: Tierarztkoordinaten prüfen
+  if (type === "Lebendvieh") {
+
+    if (!validCoordinate(vetLat, vetLng)) {
+      return alert(
+        "Bitte gültige Koordinaten für den Aufnahmeort " +
+        "des Tierarztes/der Tierärztin eingeben.\n\n" +
+        "Beispiel: 47.27000 / 11.40500"
+      );
+    }
+  }
+
+
+  // Vorhandene Marker entfernen
   points = [];
+
   markers.forEach(m => map.removeLayer(m));
   markers = [];
-  if(vetMarker) {
+
+  if (vetMarker) {
     map.removeLayer(vetMarker);
     vetMarker = null;
   }
-  document.getElementById("coords").innerHTML = "";
+
+
+  // --- Aufnahmeort ---
+  const aufnahmePoint = L.latLng(aufnahmeLat, aufnahmeLng);
+
+  const aufnahmeMarker = L.marker(
+    aufnahmePoint,
+    { icon: blueIcon }
+  ).addTo(map);
+
+  aufnahmeMarker.bindTooltip(
+    "Aufnahmeort",
+    {
+      permanent: true,
+      direction: "top",
+      offset: [0, -10],
+      className: "leaflet-tooltip-aufnahmeort"
+    }
+  ).openTooltip();
+
+  markers.push(aufnahmeMarker);
+  points.push(aufnahmePoint);
+
+
+  // --- Ablageort ---
+  const ablagePoint = L.latLng(ablageLat, ablageLng);
+
+  const ablageMarker = L.marker(
+    ablagePoint,
+    { icon: redIcon }
+  ).addTo(map);
+
+  ablageMarker.bindTooltip(
+    "Ablageort",
+    {
+      permanent: true,
+      direction: "top",
+      offset: [0, -10],
+      className: "leaflet-tooltip-ablageort"
+    }
+  ).openTooltip();
+
+  markers.push(ablageMarker);
+  points.push(ablagePoint);
+
+
+  // --- Tierarzt/Tierärztin ---
+  if (type === "Lebendvieh") {
+
+    const greenIcon = new L.Icon({
+      iconUrl:
+        'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
+      shadowUrl:
+        'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34],
+      shadowSize: [41, 41]
+    });
+
+    const vetPoint = L.latLng(vetLat, vetLng);
+
+    vetMarker = L.marker(
+      vetPoint,
+      { icon: greenIcon }
+    ).addTo(map);
+
+    vetMarker.bindTooltip(
+      "Aufnahmeort Tierarzt/Tierärztin",
+      {
+        permanent: true,
+        direction: "top",
+        offset: [0, -10],
+        className: "leaflet-tooltip-vet"
+      }
+    ).openTooltip();
+  }
+
+
+  // Koordinatenanzeige aktualisieren
+  updateCoords();
+
+
+  // Karte automatisch auf alle gesetzten Punkte zoomen
+  const allPoints = [...points];
+
+  if (vetMarker) {
+    allPoints.push(vetMarker.getLatLng());
+  }
+
+  const bounds = L.latLngBounds(allPoints);
+
+  map.fitBounds(bounds, {
+    padding: [50, 50]
+  });
 };
+
+
+document.getElementById("reset").onclick = () => {
+
+  points = [];
+
+  markers.forEach(m => map.removeLayer(m));
+  markers = [];
+
+  if (vetMarker) {
+    map.removeLayer(vetMarker);
+    vetMarker = null;
+  }
+
+  document.getElementById("coords").innerHTML = "";
+
+  // Koordinatenfelder leeren
+  document.getElementById("aufnahmeLat").value = "";
+  document.getElementById("aufnahmeLng").value = "";
+
+  document.getElementById("ablageLat").value = "";
+  document.getElementById("ablageLng").value = "";
+
+  document.getElementById("vetLat").value = "";
+  document.getElementById("vetLng").value = "";
+};
+
 
 // --- Standard: Basiskarte aktiv ---
 summer.addTo(map);
