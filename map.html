@@ -24,6 +24,45 @@ html, body {
 .highlight-blue { color: blue; font-weight: bold; }
 .highlight-green { color: green; font-weight: bold; }
 
+	/* Farbige Buttons für die einzelnen Punkte */
+.button-blue {
+  background-color: #e6f0ff;
+  color: blue;
+  border: 2px solid blue;
+  font-weight: bold;
+  border-radius: 4px;
+}
+
+.button-red {
+  background-color: #ffe6e6;
+  color: red;
+  border: 2px solid red;
+  font-weight: bold;
+  border-radius: 4px;
+}
+
+.button-green {
+  background-color: #e6f5e6;
+  color: green;
+  border: 2px solid green;
+  font-weight: bold;
+  border-radius: 4px;
+}
+
+/* Etwas dunkler beim Darüberfahren */
+.button-blue:hover {
+  background-color: #cce0ff;
+}
+
+.button-red:hover {
+  background-color: #ffcccc;
+}
+
+.button-green:hover {
+  background-color: #cceacc;
+}
+
+
 #map { height: 60vh; width: 100%; touch-action: none; }
 
 .controls {
@@ -239,9 +278,10 @@ Die aktuellen Anforderungsformulare für Viehbergungen finden Sie <a href="https
              step="0.00001"
              placeholder="Längengrad">
 
-      <button type="button" id="setAufnahme">
-        Aufnahmeort setzen
-      </button>
+<button type="button" id="setAufnahme" class="button-blue">
+  Aufnahmeort setzen
+</button>
+
     </label>
   </div>
 
@@ -258,9 +298,10 @@ Die aktuellen Anforderungsformulare für Viehbergungen finden Sie <a href="https
              step="0.00001"
              placeholder="Längengrad">
 
-      <button type="button" id="setAblage">
-        Ablageort setzen
-      </button>
+      <button type="button" id="setAblage" class="button-red">
+  Ablageort setzen
+</button>
+
     </label>
   </div>
 
@@ -277,9 +318,10 @@ Die aktuellen Anforderungsformulare für Viehbergungen finden Sie <a href="https
              step="0.00001"
              placeholder="Längengrad">
 
-      <button type="button" id="setVet">
-        Aufnahmeort Tierarzt/Tierärztin setzen
-      </button>
+<button type="button" id="setVet" class="button-green">
+  Aufnahmeort Tierarzt/Tierärztin setzen
+</button>
+
     </label>
   </div>
 
