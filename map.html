@@ -142,30 +142,28 @@ body.desktop .layer-switch { font-size: 1em; padding: 6px 10px; }
 }
 
 .coordinate-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
   margin-bottom: 10px;
 }
 
 .coordinate-row label {
-  flex: 1 1 250px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
   font-size: 1em;
 }
 
 .coordinate-row input {
-  width: 100%;
+  width: 150px;
   box-sizing: border-box;
   padding: 8px;
-  margin-top: 4px;
   font-size: 1em;
 }
 
-.coordinate-input button {
-  font-size: 1em;
+.coordinate-row button {
   padding: 8px 12px;
+  font-size: 1em;
   cursor: pointer;
-  margin-top: 5px;
 }
 
 .coordinate-input small {
@@ -175,11 +173,14 @@ body.desktop .layer-switch { font-size: 1em; padding: 6px 10px; }
 }
 
 @media (max-width: 768px) {
-  .coordinate-row {
-    flex-direction: column;
-  }
 
   .coordinate-row label {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .coordinate-row input,
+  .coordinate-row button {
     width: 100%;
   }
 }
@@ -227,41 +228,60 @@ Die aktuellen Anforderungsformulare für Viehbergungen finden Sie <a href="https
 
   <div class="coordinate-row">
     <label>
-      Aufnahmeort – Breitengrad:
-      <input type="number" id="aufnahmeLat" step="0.00001" placeholder="z. B. 47.26921">
-    </label>
+      Aufnahmeort:
+      <input type="number"
+             id="aufnahmeLat"
+             step="0.00001"
+             placeholder="Breitengrad">
 
-    <label>
-      Aufnahmeort – Längengrad:
-      <input type="number" id="aufnahmeLng" step="0.00001" placeholder="z. B. 11.40410">
+      <input type="number"
+             id="aufnahmeLng"
+             step="0.00001"
+             placeholder="Längengrad">
+
+      <button type="button" id="setAufnahme">
+        Aufnahmeort setzen
+      </button>
     </label>
   </div>
 
   <div class="coordinate-row">
     <label>
-      Ablageort – Breitengrad:
-      <input type="number" id="ablageLat" step="0.00001" placeholder="z. B. 47.26500">
-    </label>
+      Ablageort:
+      <input type="number"
+             id="ablageLat"
+             step="0.00001"
+             placeholder="Breitengrad">
 
-    <label>
-      Ablageort – Längengrad:
-      <input type="number" id="ablageLng" step="0.00001" placeholder="z. B. 11.41000">
+      <input type="number"
+             id="ablageLng"
+             step="0.00001"
+             placeholder="Längengrad">
+
+      <button type="button" id="setAblage">
+        Ablageort setzen
+      </button>
     </label>
   </div>
 
   <div class="coordinate-row vet-coordinate-row">
     <label>
-      Tierarzt/Tierärztin – Breitengrad:
-      <input type="number" id="vetLat" step="0.00001" placeholder="z. B. 47.27000">
-    </label>
+      Tierarzt/Tierärztin:
+      <input type="number"
+             id="vetLat"
+             step="0.00001"
+             placeholder="Breitengrad">
 
-    <label>
-      Tierarzt/Tierärztin – Längengrad:
-      <input type="number" id="vetLng" step="0.00001" placeholder="z. B. 11.40500">
+      <input type="number"
+             id="vetLng"
+             step="0.00001"
+             placeholder="Längengrad">
+
+      <button type="button" id="setVet">
+        Tierarzt setzen
+      </button>
     </label>
   </div>
-
-  <button id="setCoordinates">Koordinaten setzen</button>
 
   <small>
     Eingabeformat: WGS84-Dezimalgrad, z. B. 47.26921 / 11.40410
@@ -367,41 +387,130 @@ pane: 'labelPane',
 });
 
 
-// --- Marker setzen ---
+// =====================================================
+// Punkte per Mausklick setzen
+// =====================================================
+
 map.on('click', function(e) {
-  const type = document.querySelector('input[name="type"]:checked').value;
-  const maxPoints = type === "Lebendvieh" ? 3 : 2;
+
+  const type =
+    document.querySelector('input[name="type"]:checked').value;
 
 
-  if ((points.length + (vetMarker ? 1 : 0)) >= maxPoints) {
-    return alert(`Nur ${maxPoints} Punkte erlaubt (${type === "Lebendvieh" ? "inkl. Tierarzt" : ""}).`);
+  // ---------------------------------------------------
+  // Aufnahmeort
+  // ---------------------------------------------------
+
+  if (!points[0]) {
+
+    const marker = L.marker(
+      e.latlng,
+      { icon: blueIcon }
+    ).addTo(map);
+
+    marker.bindTooltip(
+      "Aufnahmeort",
+      {
+        permanent: true,
+        direction: "top",
+        offset: [0, -10],
+        className: "leaflet-tooltip-aufnahmeort"
+      }
+    ).openTooltip();
+
+    points[0] = e.latlng;
+    markers[0] = marker;
+
+    updateCoords();
+
+    return;
   }
 
-  if (points.length < 2) {
-    // bisherige Marker (Aufnahmeort & Ablageort)
-    const label = points.length === 0 ? "Aufnahmeort" : "Ablageort";
-    const icon = points.length === 0 ? blueIcon : redIcon;
-    const className = points.length === 0 ? 'leaflet-tooltip-aufnahmeort' : 'leaflet-tooltip-ablageort';
 
-    const marker = L.marker(e.latlng, { icon: icon }).addTo(map);
-    marker.bindTooltip(label, {permanent: true, direction: "top", offset: [0, -10], className: className}).openTooltip();
+  // ---------------------------------------------------
+  // Ablageort
+  // ---------------------------------------------------
 
-    markers.push(marker);
-    points.push(e.latlng);
-updateCoords();
-  } else if (type === "Lebendvieh" && !vetMarker) {
-    // Tierarzt-Marker (grün z.B.)
+  if (!points[1]) {
+
+    const marker = L.marker(
+      e.latlng,
+      { icon: redIcon }
+    ).addTo(map);
+
+    marker.bindTooltip(
+      "Ablageort",
+      {
+        permanent: true,
+        direction: "top",
+        offset: [0, -10],
+        className: "leaflet-tooltip-ablageort"
+      }
+    ).openTooltip();
+
+    points[1] = e.latlng;
+    markers[1] = marker;
+
+    updateCoords();
+
+    return;
+  }
+
+
+  // ---------------------------------------------------
+  // Tierarzt/Tierärztin
+  // ---------------------------------------------------
+
+  if (type === "Lebendvieh" && !vetMarker) {
+
     const greenIcon = new L.Icon({
-      iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
-      shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-      iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+      iconUrl:
+        'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
+
+      shadowUrl:
+        'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34],
+      shadowSize: [41, 41]
     });
 
-    vetMarker = L.marker(e.latlng, { icon: greenIcon }).addTo(map);
-    vetMarker.bindTooltip("Aufnahmeort Tierarzt/Tierärztin", {permanent:true, direction:"top", offset:[0,-10], className:"leaflet-tooltip-vet"}).openTooltip();
-updateCoords();
+    vetMarker = L.marker(
+      e.latlng,
+      { icon: greenIcon }
+    ).addTo(map);
+
+    vetMarker.bindTooltip(
+      "Aufnahmeort Tierarzt/Tierärztin",
+      {
+        permanent: true,
+        direction: "top",
+        offset: [0, -10],
+        className: "leaflet-tooltip-vet"
+      }
+    ).openTooltip();
+
+    updateCoords();
+
+    return;
   }
+
+
+  // ---------------------------------------------------
+  // Keine weiteren Punkte möglich
+  // ---------------------------------------------------
+
+  const maxPoints =
+    type === "Lebendvieh" ? 3 : 2;
+
+  alert(
+    `Nur ${maxPoints} Punkte erlaubt ` +
+    `(${type === "Lebendvieh" ? "inkl. Tierarzt" : ""}).`
+  );
+
 });
+
 
 function updateCoords() {
   let text = "";
@@ -425,87 +534,71 @@ function updateCoords() {
 
   document.getElementById("coords").innerHTML = text;
 }
-	// --- Punkte über WGS84-Koordinaten setzen ---
-document.getElementById("setCoordinates").onclick = () => {
 
-  const type = document.querySelector('input[name="type"]:checked').value;
+// =====================================================
+// Punkte über WGS84-Koordinaten einzeln setzen
+// =====================================================
 
-  // Eingabefelder auslesen
-  const aufnahmeLat = parseFloat(document.getElementById("aufnahmeLat").value);
-  const aufnahmeLng = parseFloat(document.getElementById("aufnahmeLng").value);
+function validCoordinate(lat, lng) {
+  return (
+    Number.isFinite(lat) &&
+    Number.isFinite(lng) &&
+    lat >= -90 &&
+    lat <= 90 &&
+    lng >= -180 &&
+    lng <= 180
+  );
+}
 
-  const ablageLat = parseFloat(document.getElementById("ablageLat").value);
-  const ablageLng = parseFloat(document.getElementById("ablageLng").value);
 
-  const vetLat = parseFloat(document.getElementById("vetLat").value);
-  const vetLng = parseFloat(document.getElementById("vetLng").value);
+// =====================================================
+// Aufnahmeort über Koordinaten setzen
+// =====================================================
+
+document.getElementById("setAufnahme").onclick = () => {
+
+  const lat = parseFloat(
+    document.getElementById("aufnahmeLat").value
+  );
+
+  const lng = parseFloat(
+    document.getElementById("aufnahmeLng").value
+  );
 
 
-  // Funktion zur Prüfung von Koordinaten
-  function validCoordinate(lat, lng) {
-    return (
-      Number.isFinite(lat) &&
-      Number.isFinite(lng) &&
-      lat >= -90 &&
-      lat <= 90 &&
-      lng >= -180 &&
-      lng <= 180
+  if (!validCoordinate(lat, lng)) {
+
+    alert(
+      "Bitte gültige WGS84-Koordinaten für den Aufnahmeort eingeben.\n\n" +
+      "Beispiel:\n" +
+      "Breitengrad: 47.26921\n" +
+      "Längengrad: 11.40410"
     );
+
+    return;
   }
 
 
-  // Aufnahmeort prüfen
-  if (!validCoordinate(aufnahmeLat, aufnahmeLng)) {
-    return alert(
-      "Bitte gültige Koordinaten für den Aufnahmeort eingeben.\n\n" +
-      "Beispiel: 47.26921 / 11.40410"
-    );
+  const point = L.latLng(lat, lng);
+
+
+  // Alten Aufnahmeort entfernen
+  if (markers[0]) {
+    map.removeLayer(markers[0]);
   }
 
 
-  // Ablageort prüfen
-  if (!validCoordinate(ablageLat, ablageLng)) {
-    return alert(
-      "Bitte gültige Koordinaten für den Ablageort eingeben.\n\n" +
-      "Beispiel: 47.26500 / 11.41000"
-    );
-  }
+  // Punkt setzen/ersetzen
+  points[0] = point;
 
 
-  // Bei Lebendvieh: Tierarztkoordinaten prüfen
-  if (type === "Lebendvieh") {
-
-    if (!validCoordinate(vetLat, vetLng)) {
-      return alert(
-        "Bitte gültige Koordinaten für den Aufnahmeort " +
-        "des Tierarztes/der Tierärztin eingeben.\n\n" +
-        "Beispiel: 47.27000 / 11.40500"
-      );
-    }
-  }
-
-
-  // Vorhandene Marker entfernen
-  points = [];
-
-  markers.forEach(m => map.removeLayer(m));
-  markers = [];
-
-  if (vetMarker) {
-    map.removeLayer(vetMarker);
-    vetMarker = null;
-  }
-
-
-  // --- Aufnahmeort ---
-  const aufnahmePoint = L.latLng(aufnahmeLat, aufnahmeLng);
-
-  const aufnahmeMarker = L.marker(
-    aufnahmePoint,
+  // Marker erstellen
+  const marker = L.marker(
+    point,
     { icon: blueIcon }
   ).addTo(map);
 
-  aufnahmeMarker.bindTooltip(
+  marker.bindTooltip(
     "Aufnahmeort",
     {
       permanent: true,
@@ -515,19 +608,64 @@ document.getElementById("setCoordinates").onclick = () => {
     }
   ).openTooltip();
 
-  markers.push(aufnahmeMarker);
-  points.push(aufnahmePoint);
+
+  markers[0] = marker;
 
 
-  // --- Ablageort ---
-  const ablagePoint = L.latLng(ablageLat, ablageLng);
+  updateCoords();
 
-  const ablageMarker = L.marker(
-    ablagePoint,
+  map.setView(point, Math.max(map.getZoom(), 14));
+};
+
+
+// =====================================================
+// Ablageort über Koordinaten setzen
+// =====================================================
+
+document.getElementById("setAblage").onclick = () => {
+
+  const lat = parseFloat(
+    document.getElementById("ablageLat").value
+  );
+
+  const lng = parseFloat(
+    document.getElementById("ablageLng").value
+  );
+
+
+  if (!validCoordinate(lat, lng)) {
+
+    alert(
+      "Bitte gültige WGS84-Koordinaten für den Ablageort eingeben.\n\n" +
+      "Beispiel:\n" +
+      "Breitengrad: 47.26500\n" +
+      "Längengrad: 11.41000"
+    );
+
+    return;
+  }
+
+
+  const point = L.latLng(lat, lng);
+
+
+  // Alten Ablageort entfernen
+  if (markers[1]) {
+    map.removeLayer(markers[1]);
+  }
+
+
+  // Punkt setzen/ersetzen
+  points[1] = point;
+
+
+  // Marker erstellen
+  const marker = L.marker(
+    point,
     { icon: redIcon }
   ).addTo(map);
 
-  ablageMarker.bindTooltip(
+  marker.bindTooltip(
     "Ablageort",
     {
       permanent: true,
@@ -537,59 +675,104 @@ document.getElementById("setCoordinates").onclick = () => {
     }
   ).openTooltip();
 
-  markers.push(ablageMarker);
-  points.push(ablagePoint);
+
+  markers[1] = marker;
 
 
-  // --- Tierarzt/Tierärztin ---
-  if (type === "Lebendvieh") {
-
-    const greenIcon = new L.Icon({
-      iconUrl:
-        'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
-      shadowUrl:
-        'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-      iconSize: [25, 41],
-      iconAnchor: [12, 41],
-      popupAnchor: [1, -34],
-      shadowSize: [41, 41]
-    });
-
-    const vetPoint = L.latLng(vetLat, vetLng);
-
-    vetMarker = L.marker(
-      vetPoint,
-      { icon: greenIcon }
-    ).addTo(map);
-
-    vetMarker.bindTooltip(
-      "Aufnahmeort Tierarzt/Tierärztin",
-      {
-        permanent: true,
-        direction: "top",
-        offset: [0, -10],
-        className: "leaflet-tooltip-vet"
-      }
-    ).openTooltip();
-  }
-
-
-  // Koordinatenanzeige aktualisieren
   updateCoords();
 
+  map.setView(point, Math.max(map.getZoom(), 14));
+};
 
-  // Karte automatisch auf alle gesetzten Punkte zoomen
-  const allPoints = [...points];
 
-  if (vetMarker) {
-    allPoints.push(vetMarker.getLatLng());
+// =====================================================
+// Tierarzt/Tierärztin über Koordinaten setzen
+// =====================================================
+
+document.getElementById("setVet").onclick = () => {
+
+  const type =
+    document.querySelector('input[name="type"]:checked').value;
+
+
+  // Nur bei Lebendvieh
+  if (type !== "Lebendvieh") {
+
+    alert(
+      "Der Aufnahmeort des Tierarztes/der Tierärztin " +
+      "ist nur bei einer Lebendviehbergung möglich."
+    );
+
+    return;
   }
 
-  const bounds = L.latLngBounds(allPoints);
 
-  map.fitBounds(bounds, {
-    padding: [50, 50]
+  const lat = parseFloat(
+    document.getElementById("vetLat").value
+  );
+
+  const lng = parseFloat(
+    document.getElementById("vetLng").value
+  );
+
+
+  if (!validCoordinate(lat, lng)) {
+
+    alert(
+      "Bitte gültige WGS84-Koordinaten für den Tierarzt/" +
+      "die Tierärztin eingeben.\n\n" +
+      "Beispiel:\n" +
+      "Breitengrad: 47.27000\n" +
+      "Längengrad: 11.40500"
+    );
+
+    return;
+  }
+
+
+  const greenIcon = new L.Icon({
+    iconUrl:
+      'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
+
+    shadowUrl:
+      'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
   });
+
+
+  // Alten Tierarzt-Marker entfernen
+  if (vetMarker) {
+    map.removeLayer(vetMarker);
+  }
+
+
+  const point = L.latLng(lat, lng);
+
+
+  vetMarker = L.marker(
+    point,
+    { icon: greenIcon }
+  ).addTo(map);
+
+
+  vetMarker.bindTooltip(
+    "Aufnahmeort Tierarzt/Tierärztin",
+    {
+      permanent: true,
+      direction: "top",
+      offset: [0, -10],
+      className: "leaflet-tooltip-vet"
+    }
+  ).openTooltip();
+
+
+  updateCoords();
+
+  map.setView(point, Math.max(map.getZoom(), 14));
 };
 
 
