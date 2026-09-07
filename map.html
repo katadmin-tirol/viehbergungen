@@ -257,9 +257,11 @@ Die aktuellen Anforderungsformulare für Viehbergungen finden Sie <a href="https
   <select id="layerSwitch" class="layer-switch">
 <option value="ortho">Orthophoto</option>
   <option value="summer" selected>Basiskarte</option>
-
 </select>
-
+<label>
+    <input type="checkbox" id="schutzgebieteSwitch">
+    Schutzgebiete anzeigen
+  </label>
 </div>
 	
 <div class="coordinate-input">
@@ -427,6 +429,180 @@ layers: [0,1,2,3,22,23,24,25,26,27],
 pane: 'labelPane',
   opacity: 1
 });
+// =====================================================
+// SCHUTZGEBIETE – WFS
+// Nur Objekt NPKZ und NPAZ
+// =====================================================
+
+map.createPane('schutzgebietePane');
+map.getPane('schutzgebietePane').style.zIndex = 450;
+map.getPane('schutzgebietePane').style.pointerEvents = 'auto';
+
+const schutzgebieteUrl =
+  'https://dservices3.arcgis.com/hG7UfxX49PQ8XkXh/arcgis/services/Schutzgebiete_Umwelt/WFSServer';
+
+const schutzgebieteLayer = L.geoJSON(null, {
+
+  pane: 'schutzgebietePane',
+
+  style: function(feature) {
+    return {
+      color: '#800080',
+      weight: 2,
+      opacity: 0.8,
+      fillColor: '#800080',
+      fillOpacity: 0.15
+    };
+  },
+
+  onEachFeature: function(feature, layer) {
+
+    if (feature.properties) {
+
+      let text = '';
+
+      if (feature.properties.objekt) {
+        text += '<strong>Objekt:</strong> ' +
+                feature.properties.objekt;
+      }
+
+      if (text) {
+        layer.bindPopup(text);
+      }
+    }
+  }
+
+});
+
+
+// =====================================================
+// WFS-Daten laden
+// =====================================================
+
+async function ladeSchutzgebiete() {
+
+  const filter = `
+    <ogc:Filter xmlns:ogc="http://www.opengis.net/ogc">
+      <ogc:Or>
+
+        <ogc:PropertyIsEqualTo>
+          <ogc:PropertyName>objekt</ogc:PropertyName>
+          <ogc:Literal>NPKZ</ogc:Literal>
+        </ogc:PropertyIsEqualTo>
+
+        <ogc:PropertyIsEqualTo>
+          <ogc:PropertyName>objekt</ogc:PropertyName>
+          <ogc:Literal>NPAZ</ogc:Literal>
+        </ogc:PropertyIsEqualTo>
+
+      </ogc:Or>
+    </ogc:Filter>
+  `;
+
+  const params = new URLSearchParams({
+
+    service: 'WFS',
+
+    version: '1.1.0',
+
+    request: 'GetFeature',
+
+    // EXAKTER FeatureType aus deinem GetCapabilities
+    typename: 'Schutzgebiete_Umwelt:Schutzgebiete_Umwelt',
+
+    // Leaflet verwendet WGS84
+    srsname: 'EPSG:4326',
+
+    // GeoJSON für Leaflet
+    outputFormat: 'geojson',
+
+    // Nur NPKZ und NPAZ
+    filter: filter
+
+  });
+
+  const url =
+    schutzgebieteUrl +
+    '?' +
+    params.toString();
+
+  try {
+
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(
+        'HTTP-Fehler ' + response.status
+      );
+    }
+
+    const data = await response.json();
+
+    schutzgebieteLayer.addData(data);
+
+    console.log(
+      'Schutzgebiete geladen:',
+      data.features.length
+    );
+
+  } catch (error) {
+
+    console.error(
+      'Fehler beim Laden der Schutzgebiete:',
+      error
+    );
+
+    alert(
+      'Die Schutzgebiete konnten nicht geladen werden.'
+    );
+  }
+}
+
+
+// =====================================================
+// Checkbox Schutzgebiete
+// =====================================================
+
+document.getElementById('schutzgebieteSwitch')
+  .addEventListener('change', function() {
+
+    if (this.checked) {
+
+      schutzgebieteLayer.addTo(map);
+
+    } else {
+
+      map.removeLayer(schutzgebieteLayer);
+
+    }
+
+  });
+
+
+// =====================================================
+// WFS beim Start einmal laden
+// =====================================================
+
+ladeSchutzgebiete();
+
+	// =====================================================
+// Checkbox Schutzgebiete
+// =====================================================
+
+document.getElementById('schutzgebieteSwitch')
+  .addEventListener('change', function() {
+
+    if (this.checked) {
+
+      schutzgebieteLayer.addTo(map);
+
+    } else {
+
+      map.removeLayer(schutzgebieteLayer);
+
+    }
+
+  });
 
 
 // =====================================================
