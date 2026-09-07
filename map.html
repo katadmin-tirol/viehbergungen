@@ -452,40 +452,72 @@ const schutzgebieteLayer = L.geoJSON(null, {
 
   style: function(feature) {
 
+    const objekt =
+      feature.properties &&
+      (feature.properties.objekt || feature.properties.OBJEKT);
+
+    // NPKZ = Nationalpark Hohe Tauern Kernzone
+    if (objekt === 'NPKZ') {
+      return {
+        color: '#800080',       // dunkles Violett
+        weight: 2,
+        opacity: 0.9,
+        fillColor: '#800080',
+        fillOpacity: 0.20
+      };
+    }
+
+    // NPAZ = Nationalpark Hohe Tauern Außenzone
+    if (objekt === 'NPAZ') {
+      return {
+        color: '#ff8c00',       // Orange
+        weight: 2,
+        opacity: 0.9,
+        fillColor: '#ff8c00',
+        fillOpacity: 0.20
+      };
+    }
+
+    // Fallback
     return {
-      color: '#800080',
+      color: '#666666',
       weight: 2,
       opacity: 0.8,
-
-      fillColor: '#800080',
+      fillColor: '#666666',
       fillOpacity: 0.15
     };
-
   },
 
   onEachFeature: function(feature, layer) {
 
-    if (feature.properties) {
+    if (!feature.properties) return;
 
-      let text = '';
+    const objekt =
+      feature.properties.objekt ||
+      feature.properties.OBJEKT;
 
-      if (feature.properties.OBJEKT) {
+    let text = '';
 
-        text =
-          '<strong>Objekt:</strong> ' +
-          feature.properties.OBJEKT;
+    if (OBJEKT === 'NPKZ') {
 
-      }
+      text =
+        '<strong>Nationalpark Hohe Tauern Kernzone</strong>';
 
-      if (text) {
-        layer.bindPopup(text);
-      }
+    } else if (OBJEKT === 'NPAZ') {
 
+      text =
+        '<strong>Nationalpark Hohe Tauern Außenzone</strong>';
+
+    }
+
+    if (text) {
+      layer.bindPopup(text);
     }
 
   }
 
 });
+
 
 
 // =====================================================
