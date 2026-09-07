@@ -434,25 +434,33 @@ pane: 'labelPane',
 // Nur Objekt NPKZ und NPAZ
 // =====================================================
 
+// Eigener Layer-Pane für die Schutzgebiete
 map.createPane('schutzgebietePane');
 map.getPane('schutzgebietePane').style.zIndex = 450;
 map.getPane('schutzgebietePane').style.pointerEvents = 'auto';
 
+
+// WFS-Adresse
 const schutzgebieteUrl =
   'https://dservices3.arcgis.com/hG7UfxX49PQ8XkXh/arcgis/services/Schutzgebiete_Umwelt/WFSServer';
 
+
+// Leerer Leaflet-Layer
 const schutzgebieteLayer = L.geoJSON(null, {
 
   pane: 'schutzgebietePane',
 
   style: function(feature) {
+
     return {
       color: '#800080',
       weight: 2,
       opacity: 0.8,
+
       fillColor: '#800080',
       fillOpacity: 0.15
     };
+
   },
 
   onEachFeature: function(feature, layer) {
@@ -461,15 +469,20 @@ const schutzgebieteLayer = L.geoJSON(null, {
 
       let text = '';
 
-      if (feature.properties.objekt) {
-        text += '<strong>Objekt:</strong> ' +
-                feature.properties.objekt;
+      if (feature.properties.OBJEKT) {
+
+        text =
+          '<strong>Objekt:</strong> ' +
+          feature.properties.OBJEKT;
+
       }
 
       if (text) {
         layer.bindPopup(text);
       }
+
     }
+
   }
 
 });
@@ -481,69 +494,94 @@ const schutzgebieteLayer = L.geoJSON(null, {
 
 async function ladeSchutzgebiete() {
 
-  const filter = `
-    <ogc:Filter xmlns:ogc="http://www.opengis.net/ogc">
-      <ogc:Or>
-
-        <ogc:PropertyIsEqualTo>
-          <ogc:PropertyName>objekt</ogc:PropertyName>
-          <ogc:Literal>NPKZ</ogc:Literal>
-        </ogc:PropertyIsEqualTo>
-
-        <ogc:PropertyIsEqualTo>
-          <ogc:PropertyName>objekt</ogc:PropertyName>
-          <ogc:Literal>NPAZ</ogc:Literal>
-        </ogc:PropertyIsEqualTo>
-
-      </ogc:Or>
-    </ogc:Filter>
-  `;
-
   const params = new URLSearchParams({
 
     service: 'WFS',
 
-    version: '1.1.0',
+    version: '2.0.0',
 
     request: 'GetFeature',
 
-    // EXAKTER FeatureType aus deinem GetCapabilities
-    typename: 'Schutzgebiete_Umwelt:Schutzgebiete_Umwelt',
+    typeNames:
+      'Schutzgebiete_Umwelt:Schutzgebiete_Umwelt',
 
-    // Leaflet verwendet WGS84
-    srsname: 'EPSG:4326',
+    count: '10000',
 
-    // GeoJSON für Leaflet
     outputFormat: 'geojson',
 
-    // Nur NPKZ und NPAZ
-    filter: filter
+    srsName: 'EPSG:4326'
 
   });
+
 
   const url =
     schutzgebieteUrl +
     '?' +
     params.toString();
 
+
+  console.log(
+    'WFS-Schutzgebiete:',
+    url
+  );
+
+
   try {
 
     const response = await fetch(url);
 
+
     if (!response.ok) {
+
       throw new Error(
-        'HTTP-Fehler ' + response.status
+        'HTTP-Fehler: ' +
+        response.status
       );
+
     }
 
-    const data = await response.json();
 
-    schutzgebieteLayer.addData(data);
+    const data =
+      await response.json();
+
 
     console.log(
-      'Schutzgebiete geladen:',
-      data.features.length
+      'WFS erfolgreich geladen.',
+      data
     );
+
+
+    // -------------------------------------------------
+    // Nur NPKZ und NPAZ übernehmen
+    // -------------------------------------------------
+
+    const gefilterteFeatures =
+      data.features.filter(function(feature) {
+
+        const objekt =
+          feature.properties &&
+          feature.properties.objekt;
+
+        return (
+          objekt === 'NPKZ' ||
+          objekt === 'NPAZ'
+        );
+
+      });
+
+
+    console.log(
+      'NPKZ/NPAZ gefunden:',
+      gefilterteFeatures.length
+    );
+
+
+    // Gefilterte Daten in Leaflet laden
+    schutzgebieteLayer.addData({
+      type: 'FeatureCollection',
+      features: gefilterteFeatures
+    });
+
 
   } catch (error) {
 
@@ -553,9 +591,12 @@ async function ladeSchutzgebiete() {
     );
 
     alert(
-      'Die Schutzgebiete konnten nicht geladen werden.'
+      'Die Schutzgebiete konnten nicht geladen werden. ' +
+      'Details stehen in der Browser-Konsole.'
     );
+
   }
+
 }
 
 
@@ -584,25 +625,6 @@ document.getElementById('schutzgebieteSwitch')
 // =====================================================
 
 ladeSchutzgebiete();
-
-	// =====================================================
-// Checkbox Schutzgebiete
-// =====================================================
-
-document.getElementById('schutzgebieteSwitch')
-  .addEventListener('change', function() {
-
-    if (this.checked) {
-
-      schutzgebieteLayer.addTo(map);
-
-    } else {
-
-      map.removeLayer(schutzgebieteLayer);
-
-    }
-
-  });
 
 
 // =====================================================
