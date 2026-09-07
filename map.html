@@ -452,12 +452,12 @@ const schutzgebieteLayer = L.geoJSON(null, {
 
   style: function(feature) {
 
-    const objekt =
+    const OBJEKT =
       feature.properties &&
-      (feature.properties.objekt || feature.properties.OBJEKT);
+      (feature.properties.OBJEKT || feature.properties.OBJEKT);
 
     // NPKZ = Nationalpark Hohe Tauern Kernzone
-    if (objekt === 'NPKZ') {
+    if (OBJEKT === 'NPKZ') {
       return {
         color: '#800080',       // dunkles Violett
         weight: 2,
@@ -468,7 +468,7 @@ const schutzgebieteLayer = L.geoJSON(null, {
     }
 
     // NPAZ = Nationalpark Hohe Tauern Außenzone
-    if (objekt === 'NPAZ') {
+    if (OBJEKT === 'NPAZ') {
       return {
         color: '#ff8c00',       // Orange
         weight: 2,
@@ -492,8 +492,8 @@ const schutzgebieteLayer = L.geoJSON(null, {
 
     if (!feature.properties) return;
 
-    const objekt =
-      feature.properties.objekt ||
+    const OBJEKT =
+      feature.properties.OBJEKT ||
       feature.properties.OBJEKT;
 
     let text = '';
