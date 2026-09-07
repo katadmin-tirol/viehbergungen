@@ -443,7 +443,7 @@ pane: 'labelPane',
 // Eigener Layer-Pane für die Schutzgebiete
 map.createPane('schutzgebietePane');
 map.getPane('schutzgebietePane').style.zIndex = 450;
-map.getPane('schutzgebietePane').style.pointerEvents = 'auto';
+map.getPane('schutzgebietePane').style.pointerEvents = 'none';
 
 
 // WFS-Adresse
@@ -679,6 +679,11 @@ const tueplLayer = L.geoJSON(null, {
       fillOpacity: 0.25
     };
   },
+
+	map.createPane('tueplPane');
+map.getPane('tueplPane').style.zIndex = 450;
+map.getPane('tueplPane').style.pointerEvents = 'none';
+
 
   onEachFeature: function(feature, layer) {
 
