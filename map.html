@@ -558,13 +558,13 @@ async function ladeSchutzgebiete() {
     const gefilterteFeatures =
       data.features.filter(function(feature) {
 
-        const objekt =
+        const OBJEKT =
           feature.properties &&
-          feature.properties.objekt;
+          feature.properties.OBJEKT;
 
         return (
-          objekt === 'NPKZ' ||
-          objekt === 'NPAZ'
+          OBJEKT === 'NPKZ' ||
+          OBJEKT === 'NPAZ'
         );
 
       });
