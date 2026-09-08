@@ -454,7 +454,9 @@ const schutzgebieteUrl =
 // Leerer Leaflet-Layer
 const schutzgebieteLayer = L.geoJSON(null, {
 
-  pane: 'schutzgebietePane',
+ interactive: false,
+	
+	pane: 'schutzgebietePane',
 
   style: function(feature) {
 
@@ -670,6 +672,8 @@ ladeSchutzgebiete();
 
 const tueplLayer = L.geoJSON(null, {
 
+  interactive: false,
+
   style: function(feature) {
     return {
       color: '#FF7F50',
@@ -678,29 +682,10 @@ const tueplLayer = L.geoJSON(null, {
       fillColor: '#FF7F50',
       fillOpacity: 0.25
     };
-  },
-
-
-  onEachFeature: function(feature, layer) {
-
-    if (feature.properties) {
-
-      const name =
-        feature.properties.name ||
-        feature.properties.NAME ||
-        feature.properties.bezeichnung ||
-        feature.properties.BEZEICHNUNG;
-
-      if (name) {
-        layer.bindPopup(
-          `<strong>${name}</strong>`
-        );
-      }
-    }
-
   }
 
 });
+
 
 async function ladeTuepl() {
 
