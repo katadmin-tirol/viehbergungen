@@ -1419,6 +1419,19 @@ await new Promise(r => setTimeout(r, 2500));
     const controlsToHide = document.querySelectorAll('.leaflet-control-zoom, .leaflet-control-geocoder');
     controlsToHide.forEach(el => { if (el) el.style.display = 'none'; });
 
+// Zusatzlayer für PDF-Export in den Vordergrund bringen
+if (document.getElementById('schutzgebieteSwitch').checked) {
+    if (map.hasLayer(schutzgebieteLayer)) {
+        schutzgebieteLayer.bringToFront();
+    }
+}
+
+if (document.getElementById('tueplSwitch').checked) {
+    if (map.hasLayer(tueplLayer)) {
+        tueplLayer.bringToFront();
+    }
+}
+	  
     // Map als Canvas
 const canvas = await html2canvas(mapEl, {
   useCORS: true,
