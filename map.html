@@ -740,21 +740,21 @@ legend.onAdd = function(map) {
       <span class="legend-color"
             style="background:#FF7F50; border-color:#FF7F50;">
       </span>
-      TÜPL
+      Tüpl
     </div>
 
     <div class="legend-item legend-np-aussen">
       <span class="legend-color"
             style="background:#0000FF; border-color:#0000FF;">
       </span>
-      Nationalpark Außenzone
+      Nationalpark Hohe Tauern Außenzone
     </div>
 
     <div class="legend-item legend-np-kern">
       <span class="legend-color"
             style="background:#8B008B; border-color:#8B008B;">
       </span>
-      Nationalpark Kernzone
+      Nationalpark Hohe Tauern Kernzone
     </div>
   `;
 
@@ -1412,7 +1412,7 @@ await new Promise(resolve => {
 await waitUntilMapIdle(map);
 
 // kleiner Sicherheitspuffer
-await new Promise(r => setTimeout(r, 500));
+await new Promise(r => setTimeout(r, 1000));
 
   try {
     // Zoom-/Geocoder-Steuerelemente ausblenden
