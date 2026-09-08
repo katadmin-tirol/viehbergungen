@@ -223,6 +223,39 @@ body.desktop .layer-switch { font-size: 1em; padding: 6px 10px; }
     width: 100%;
   }
 }
+
+	/* =====================================================
+   LEGENDE AUF DER KARTE
+   ===================================================== */
+
+.map-legend {
+  background: rgba(255, 255, 255, 0.95);
+  padding: 10px 12px;
+  border-radius: 5px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.35);
+  font-size: 14px;
+  line-height: 22px;
+}
+
+.map-legend-title {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.legend-color {
+  width: 18px;
+  height: 12px;
+  margin-right: 8px;
+  border: 2px solid;
+  box-sizing: border-box;
+}
+
 </style>
 </head>
 <body>
@@ -657,7 +690,10 @@ document.getElementById('schutzgebieteSwitch')
 
     }
 
+    updateLegend();
+
   });
+
 
 
 // =====================================================
@@ -685,6 +721,100 @@ const tueplLayer = L.geoJSON(null, {
   }
 
 });
+// =====================================================
+// Kartenlegende
+// =====================================================
+
+const legend = L.control({
+  position: 'bottomright'
+});
+
+legend.onAdd = function(map) {
+
+  const div = L.DomUtil.create('div', 'map-legend');
+
+  div.innerHTML = `
+    <div class="map-legend-title">Legende</div>
+
+    <div class="legend-item legend-tuepl">
+      <span class="legend-color"
+            style="background:#FF7F50; border-color:#FF7F50;">
+      </span>
+      TÜPL
+    </div>
+
+    <div class="legend-item legend-np-aussen">
+      <span class="legend-color"
+            style="background:#0000FF; border-color:#0000FF;">
+      </span>
+      Nationalpark Außenzone
+    </div>
+
+    <div class="legend-item legend-np-kern">
+      <span class="legend-color"
+            style="background:#8B008B; border-color:#8B008B;">
+      </span>
+      Nationalpark Kernzone
+    </div>
+  `;
+
+  return div;
+};
+// =====================================================
+// Legende aktualisieren
+// =====================================================
+
+function updateLegend() {
+
+  const schutzgebieteAktiv =
+    document.getElementById('schutzgebieteSwitch').checked;
+
+  const tueplAktiv =
+    document.getElementById('tueplSwitch').checked;
+
+  // Falls kein Zusatzlayer aktiv ist:
+  // Legende entfernen
+  if (!schutzgebieteAktiv && !tueplAktiv) {
+
+    if (map.hasLayer(legend)) {
+      map.removeControl(legend);
+    }
+
+    return;
+  }
+
+  // Legende hinzufügen
+  if (!map.hasLayer(legend)) {
+    legend.addTo(map);
+  }
+
+  // Einzelne Einträge ein-/ausblenden
+  const legendElement = document.querySelector('.map-legend');
+
+  if (!legendElement) return;
+
+  const tueplItem =
+    legendElement.querySelector('.legend-tuepl');
+
+  const npAussenItem =
+    legendElement.querySelector('.legend-np-aussen');
+
+  const npKernItem =
+    legendElement.querySelector('.legend-np-kern');
+
+
+  // TÜPL
+  tueplItem.style.display =
+    tueplAktiv ? 'flex' : 'none';
+
+
+  // Nationalpark
+  npAussenItem.style.display =
+    schutzgebieteAktiv ? 'flex' : 'none';
+
+  npKernItem.style.display =
+    schutzgebieteAktiv ? 'flex' : 'none';
+}
 
 
 async function ladeTuepl() {
@@ -735,7 +865,10 @@ document.getElementById('tueplSwitch')
 
     }
 
+    updateLegend();
+
   });
+
 
 	
 // =====================================================
