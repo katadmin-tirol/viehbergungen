@@ -640,7 +640,7 @@ return true;
 
 
 
-  } catch (error) {
+    } catch (error) {
 
     console.error(
       'Fehler beim Laden der Schutzgebiete:',
@@ -652,9 +652,9 @@ return true;
       'Details stehen in der Browser-Konsole.'
     );
 
+    return false;
   }
 
-}
 
 
 
@@ -663,7 +663,8 @@ return true;
 // WFS beim Start laden und Promise speichern
 // =====================================================
 
-let schutzgebietePromise = ladeSchutzgebiete();
+const schutzgebietePromise = ladeSchutzgebiete();
+
 
 
 // =====================================================
@@ -769,7 +770,8 @@ async function ladeTuepl() {
   }
 }
 
-let tueplPromise = ladeTuepl();
+const tueplPromise = ladeTuepl();
+
 
 // =====================================================
 // Punkte per Mausklick setzen
@@ -1226,9 +1228,35 @@ gemeindegrenzen.addTo(map);
 labels.addTo(map);
 orthoLabelsArcGIS.addTo(map);
 
-// --- Flugbeschränkungen immer anzeigen ---
-schutzgebieteLayer.addTo(map);
-tueplLayer.addTo(map);
+// =====================================================
+// Flugbeschränkungen laden und anschließend anzeigen
+// =====================================================
+
+Promise.all([
+  schutzgebietePromise,
+  tueplPromise
+]).then(([schutzgebieteOK, tueplOK]) => {
+
+  console.log(
+    'Schutzgebiete geladen:',
+    schutzgebieteOK
+  );
+
+  console.log(
+    'TÜPL geladen:',
+    tueplOK
+  );
+
+  if (schutzgebieteOK) {
+    schutzgebieteLayer.addTo(map);
+  }
+
+  if (tueplOK) {
+    tueplLayer.addTo(map);
+  }
+
+});
+
 
 document.getElementById("layerSwitch").addEventListener('change', (e) => {
   const value = e.target.value;
@@ -1311,17 +1339,34 @@ document.getElementById("exportPDF").onclick = async () => {
     return alert("Bitte zwei Punkte setzen.");
   }
 
-  // Auf das Laden der Flugbeschränkungen warten
-  if (!schutzgebieteGeladen) {
-    await new Promise(resolve => {
-      const check = setInterval(() => {
-        if (schutzgebieteGeladen) {
-          clearInterval(check);
-          resolve();
-        }
-      }, 100);
-    });
+  // =====================================================
+  // Warten, bis Schutzgebiete und TÜPL geladen sind
+  // =====================================================
+
+  const [schutzgebieteOK, tueplOK] = await Promise.all([
+    schutzgebietePromise,
+    tueplPromise
+  ]);
+
+  console.log(
+    'PDF-Export – Schutzgebiete:',
+    schutzgebieteOK
+  );
+
+  console.log(
+    'PDF-Export – TÜPL:',
+    tueplOK
+  );
+
+  if (!schutzgebieteOK || !tueplOK) {
+    alert(
+      'Die Flugbeschränkungen konnten nicht vollständig geladen werden. ' +
+      'Der PDF-Export wurde abgebrochen.'
+    );
+
+    return;
   }
+
 
   if (!tueplGeladen) {
     await new Promise(resolve => {
