@@ -459,6 +459,16 @@ layers: [0,1,2,3,22,23,24,25,26,27],
 pane: 'labelPane',
   opacity: 1
 });
+
+	// =====================================================
+// Pane für Flugbeschränkungen
+// =====================================================
+
+map.createPane('flugbeschraenkungenPane');
+map.getPane('flugbeschraenkungenPane').style.zIndex = 450;
+map.getPane('flugbeschraenkungenPane').style.pointerEvents = 'none';
+
+	
 // =====================================================
 // SCHUTZGEBIETE – WFS
 // Nur Objekt NPKZ und NPAZ
@@ -484,9 +494,10 @@ const schutzgebieteLayer = L.geoJSON(null, {
 
   style: function(feature) {
 
-    const OBJEKT =
-      feature.properties &&
-      (feature.properties.OBJEKT || feature.properties.OBJEKT);
+const OBJEKT =
+  feature.properties &&
+  feature.properties.OBJEKT;
+
 
     // NPKZ = Nationalpark Hohe Tauern Kernzone
     if (OBJEKT === 'NPKZ') {
@@ -520,33 +531,9 @@ const schutzgebieteLayer = L.geoJSON(null, {
     };
   },
 
-  onEachFeature: function(feature, layer) {
-
-    if (!feature.properties) return;
-
-    const OBJEKT =
-      feature.properties.OBJEKT ||
-      feature.properties.OBJEKT;
-
-    let text = '';
-
-    if (OBJEKT === 'NPKZ') {
-
-      text =
-        '<strong>Nationalpark Hohe Tauern Kernzone</strong>';
-
-    } else if (OBJEKT === 'NPAZ') {
-
-      text =
-        '<strong>Nationalpark Hohe Tauern Außenzone</strong>';
-
-    }
-
-    if (text) {
-      layer.bindPopup(text);
-    }
-
-  }
+ onEachFeature: function(feature, layer) {
+  // Keine Klickfunktion / kein Popup
+}
 
 });
 
@@ -555,7 +542,8 @@ const schutzgebieteLayer = L.geoJSON(null, {
 // =====================================================
 // WFS-Daten laden
 // =====================================================
-
+let schutzgebieteGeladen = false;
+	
 async function ladeSchutzgebiete() {
 
   const params = new URLSearchParams({
@@ -646,6 +634,8 @@ async function ladeSchutzgebiete() {
       features: gefilterteFeatures
     });
 
+	  schutzgebieteGeladen = true;
+
 
   } catch (error) {
 
@@ -679,6 +669,7 @@ ladeSchutzgebiete();
 const tueplLayer = L.geoJSON(null, {
 
   interactive: false,
+	pane: 'schutzgebietePane',
 
   style: function(feature) {
     return {
@@ -735,6 +726,8 @@ legend.onAdd = function(map) {
 // Legende immer anzeigen
 legend.addTo(map);
 
+let tueplGeladen = false;
+
 async function ladeTuepl() {
 
   try {
@@ -752,6 +745,9 @@ async function ladeTuepl() {
     console.log('TÜPL GeoJSON geladen:', data);
 
     tueplLayer.addData(data);
+
+	tueplGeladen = true;
+
 
   } catch (error) {
 
@@ -1277,20 +1273,60 @@ function waitUntilMapIdle(map) {
 
 // --- PDF Export ---
 document.getElementById("exportPDF").onclick = async () => {
-  if (points.length < 2) return alert("Bitte zwei Punkte setzen.");
-  const type = document.querySelector('input[name="type"]:checked').value;
+
+  if (points.length < 2) {
+    return alert("Bitte zwei Punkte setzen.");
+  }
+
+  // Auf das Laden der Flugbeschränkungen warten
+  if (!schutzgebieteGeladen) {
+    await new Promise(resolve => {
+      const check = setInterval(() => {
+        if (schutzgebieteGeladen) {
+          clearInterval(check);
+          resolve();
+        }
+      }, 100);
+    });
+  }
+
+  if (!tueplGeladen) {
+    await new Promise(resolve => {
+      const check = setInterval(() => {
+        if (tueplGeladen) {
+          clearInterval(check);
+          resolve();
+        }
+      }, 100);
+    });
+  }
+
+  const type =
+    document.querySelector('input[name="type"]:checked').value;
+
   const { jsPDF } = window.jspdf;
-const pdf = new jsPDF({
-  orientation: isMobile ? "portrait" : "landscape",
-  unit: "mm",
-  format: "a4",
-  compress: true
-});
+
+  const pdf = new jsPDF({
+    orientation: isMobile ? "portrait" : "landscape",
+    unit: "mm",
+    format: "a4",
+    compress: true
+  });
 
   const mapEl = document.getElementById("map");
+
   const originalHeight = mapEl.style.height;
   const originalView = map.getCenter();
   const originalZoom = map.getZoom();
+
+  // Sicherstellen, dass beide Layer auf der Karte liegen
+  if (!map.hasLayer(schutzgebieteLayer)) {
+    schutzgebieteLayer.addTo(map);
+  }
+
+  if (!map.hasLayer(tueplLayer)) {
+    tueplLayer.addTo(map);
+  }
 
   const allPoints = [...points];
 if (vetMarker) {
@@ -1322,22 +1358,25 @@ await new Promise(r => setTimeout(r, 2500));
     const controlsToHide = document.querySelectorAll('.leaflet-control-zoom, .leaflet-control-geocoder');
     controlsToHide.forEach(el => { if (el) el.style.display = 'none'; });
 
-// Flugbeschränkungen für PDF-Export nach vorne bringen
-if (map.hasLayer(schutzgebieteLayer)) {
-    schutzgebieteLayer.bringToFront();
+// Flugbeschränkungen für PDF-Export sicherstellen
+if (!map.hasLayer(schutzgebieteLayer)) {
+    schutzgebieteLayer.addTo(map);
 }
 
-if (map.hasLayer(tueplLayer)) {
-    tueplLayer.bringToFront();
+if (!map.hasLayer(tueplLayer)) {
+    tueplLayer.addTo(map);
 }
+
 
 	  
-    // Map als Canvas
 const canvas = await html2canvas(mapEl, {
   useCORS: true,
   allowTaint: true,
-  scale: 1
+  scale: 1,
+  backgroundColor: '#ffffff',
+  logging: false
 });
+
     controlsToHide.forEach(el => { if (el) el.style.display = ''; });
 
     let imgWidth = pdfWidth;
