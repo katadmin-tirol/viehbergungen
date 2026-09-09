@@ -629,12 +629,15 @@ async function ladeSchutzgebiete() {
 
 
     // Gefilterte Daten in Leaflet laden
-    schutzgebieteLayer.addData({
-      type: 'FeatureCollection',
-      features: gefilterteFeatures
-    });
+schutzgebieteLayer.addData({
+  type: 'FeatureCollection',
+  features: gefilterteFeatures
+});
 
-	  schutzgebieteGeladen = true;
+schutzgebieteGeladen = true;
+
+return true;
+
 
 
   } catch (error) {
@@ -657,10 +660,11 @@ async function ladeSchutzgebiete() {
 
 
 // =====================================================
-// WFS beim Start einmal laden
+// WFS beim Start laden und Promise speichern
 // =====================================================
 
-ladeSchutzgebiete();
+let schutzgebietePromise = ladeSchutzgebiete();
+
 
 // =====================================================
 // TÜPL – GeoJSON
@@ -729,7 +733,6 @@ legend.addTo(map);
 let tueplGeladen = false;
 
 async function ladeTuepl() {
-
   try {
 
     const response = await fetch('tuepl.geojson');
@@ -746,8 +749,9 @@ async function ladeTuepl() {
 
     tueplLayer.addData(data);
 
-	tueplGeladen = true;
+    tueplGeladen = true;
 
+    return true;
 
   } catch (error) {
 
@@ -761,11 +765,12 @@ async function ladeTuepl() {
       'Details stehen in der Browser-Konsole.'
     );
 
+    return false;
   }
-
 }
-ladeTuepl();
-	
+
+let tueplPromise = ladeTuepl();
+
 // =====================================================
 // Punkte per Mausklick setzen
 // =====================================================
@@ -1271,6 +1276,34 @@ function waitUntilMapIdle(map) {
     });
 }
 
+// =====================================================
+// Warten, bis die Karte und GeoJSON-Layer gerendert sind
+// =====================================================
+
+function waitForMapRendering(map) {
+  return new Promise(resolve => {
+
+    // Karte neu zeichnen
+    map.invalidateSize();
+
+    // Leaflet braucht mehrere Renderzyklen,
+    // bevor SVG/DOM-Elemente vollständig vorhanden sind.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+
+          // Noch einen kleinen Puffer für Browser-Rendering
+          setTimeout(() => {
+            resolve();
+          }, 500);
+
+        });
+      });
+    });
+  });
+}
+
+	
 // --- PDF Export ---
 document.getElementById("exportPDF").onclick = async () => {
 
