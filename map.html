@@ -1251,28 +1251,63 @@ document.getElementById("layerSwitch").addEventListener('change', (e) => {
   markers.forEach(m => m.addTo(map));
 });
 
-function waitUntilMapIdle(map) {
+function waitForMapTiles(map, timeout = 10000) {
     return new Promise(resolve => {
 
+        const start = Date.now();
+
         function check() {
+
             let loading = false;
 
             map.eachLayer(layer => {
-                if (layer._loading) {
-                    loading = true;
+
+                // Normale Leaflet-TileLayer
+                if (layer instanceof L.TileLayer) {
+
+                    const container = layer.getContainer();
+
+                    if (container) {
+                        const tiles = container.querySelectorAll('img');
+
+                        tiles.forEach(img => {
+                            if (!img.complete || img.naturalWidth === 0) {
+                                loading = true;
+                            }
+                        });
+                    }
+                }
+
+                // Esri DynamicMapLayer
+                if (layer._currentImage) {
+                    const img = layer._currentImage;
+
+                    if (!img.complete || img.naturalWidth === 0) {
+                        loading = true;
+                    }
                 }
             });
 
+            // Alles geladen
             if (!loading) {
                 resolve();
-            } else {
-                setTimeout(check, 200);
+                return;
             }
+
+            // Sicherheits-Timeout
+            if (Date.now() - start > timeout) {
+                console.warn("Timeout beim Warten auf Kartenlayer.");
+                resolve();
+                return;
+            }
+
+            setTimeout(check, 100);
         }
 
         check();
     });
 }
+
 
 // --- PDF Export ---
 document.getElementById("exportPDF").onclick = async () => {
@@ -1311,7 +1346,7 @@ await new Promise(resolve => {
     map.once('moveend', resolve);
 });
 
-await waitUntilMapIdle(map);
+await waitForMapTiles(map);
 
 // kleiner Sicherheitspuffer
 await new Promise(r => setTimeout(r, 2500));
