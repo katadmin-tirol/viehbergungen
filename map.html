@@ -2,7 +2,8 @@
 <html lang="de">
 <head>
 
-	
+<link rel="stylesheet" href="https://unpkg.com/leaflet.browser.print/dist/leaflet.browser.print.min.css" />
+<script src="https://unpkg.com/leaflet.browser.print/dist/leaflet.browser.print.min.js"></script>
 
 <meta charset="utf-8" />
 <title>Kartenerstellung Viehbergungen</title>
@@ -1251,63 +1252,28 @@ document.getElementById("layerSwitch").addEventListener('change', (e) => {
   markers.forEach(m => m.addTo(map));
 });
 
-function waitForMapTiles(map, timeout = 10000) {
+function waitUntilMapIdle(map) {
     return new Promise(resolve => {
 
-        const start = Date.now();
-
         function check() {
-
             let loading = false;
 
             map.eachLayer(layer => {
-
-                // Normale Leaflet-TileLayer
-                if (layer instanceof L.TileLayer) {
-
-                    const container = layer.getContainer();
-
-                    if (container) {
-                        const tiles = container.querySelectorAll('img');
-
-                        tiles.forEach(img => {
-                            if (!img.complete || img.naturalWidth === 0) {
-                                loading = true;
-                            }
-                        });
-                    }
-                }
-
-                // Esri DynamicMapLayer
-                if (layer._currentImage) {
-                    const img = layer._currentImage;
-
-                    if (!img.complete || img.naturalWidth === 0) {
-                        loading = true;
-                    }
+                if (layer._loading) {
+                    loading = true;
                 }
             });
 
-            // Alles geladen
             if (!loading) {
                 resolve();
-                return;
+            } else {
+                setTimeout(check, 200);
             }
-
-            // Sicherheits-Timeout
-            if (Date.now() - start > timeout) {
-                console.warn("Timeout beim Warten auf Kartenlayer.");
-                resolve();
-                return;
-            }
-
-            setTimeout(check, 100);
         }
 
         check();
     });
 }
-
 
 // --- PDF Export ---
 document.getElementById("exportPDF").onclick = async () => {
@@ -1346,7 +1312,7 @@ await new Promise(resolve => {
     map.once('moveend', resolve);
 });
 
-await waitForMapTiles(map);
+await waitUntilMapIdle(map);
 
 // kleiner Sicherheitspuffer
 await new Promise(r => setTimeout(r, 2500));
