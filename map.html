@@ -459,16 +459,6 @@ layers: [0,1,2,3,22,23,24,25,26,27],
 pane: 'labelPane',
   opacity: 1
 });
-
-	// =====================================================
-// Pane für Flugbeschränkungen
-// =====================================================
-
-map.createPane('flugbeschraenkungenPane');
-map.getPane('flugbeschraenkungenPane').style.zIndex = 450;
-map.getPane('flugbeschraenkungenPane').style.pointerEvents = 'none';
-
-	
 // =====================================================
 // SCHUTZGEBIETE – WFS
 // Nur Objekt NPKZ und NPAZ
@@ -494,10 +484,9 @@ const schutzgebieteLayer = L.geoJSON(null, {
 
   style: function(feature) {
 
-const OBJEKT =
-  feature.properties &&
-  feature.properties.OBJEKT;
-
+    const OBJEKT =
+      feature.properties &&
+      (feature.properties.OBJEKT || feature.properties.OBJEKT);
 
     // NPKZ = Nationalpark Hohe Tauern Kernzone
     if (OBJEKT === 'NPKZ') {
@@ -531,9 +520,33 @@ const OBJEKT =
     };
   },
 
- onEachFeature: function(feature, layer) {
-  // Keine Klickfunktion / kein Popup
-}
+  onEachFeature: function(feature, layer) {
+
+    if (!feature.properties) return;
+
+    const OBJEKT =
+      feature.properties.OBJEKT ||
+      feature.properties.OBJEKT;
+
+    let text = '';
+
+    if (OBJEKT === 'NPKZ') {
+
+      text =
+        '<strong>Nationalpark Hohe Tauern Kernzone</strong>';
+
+    } else if (OBJEKT === 'NPAZ') {
+
+      text =
+        '<strong>Nationalpark Hohe Tauern Außenzone</strong>';
+
+    }
+
+    if (text) {
+      layer.bindPopup(text);
+    }
+
+  }
 
 });
 
@@ -542,8 +555,7 @@ const OBJEKT =
 // =====================================================
 // WFS-Daten laden
 // =====================================================
-let schutzgebieteGeladen = false;
-	
+
 async function ladeSchutzgebiete() {
 
   const params = new URLSearchParams({
@@ -629,18 +641,13 @@ async function ladeSchutzgebiete() {
 
 
     // Gefilterte Daten in Leaflet laden
-schutzgebieteLayer.addData({
-  type: 'FeatureCollection',
-  features: gefilterteFeatures
-});
-
-schutzgebieteGeladen = true;
-
-return true;
+    schutzgebieteLayer.addData({
+      type: 'FeatureCollection',
+      features: gefilterteFeatures
+    });
 
 
-
-    } catch (error) {
+  } catch (error) {
 
     console.error(
       'Fehler beim Laden der Schutzgebiete:',
@@ -652,19 +659,18 @@ return true;
       'Details stehen in der Browser-Konsole.'
     );
 
-    return false;
   }
- }
+
+}
+
 
 
 
 // =====================================================
-// WFS beim Start laden und Promise speichern
+// WFS beim Start einmal laden
 // =====================================================
 
-const schutzgebietePromise = ladeSchutzgebiete();
-
-
+ladeSchutzgebiete();
 
 // =====================================================
 // TÜPL – GeoJSON
@@ -673,7 +679,6 @@ const schutzgebietePromise = ladeSchutzgebiete();
 const tueplLayer = L.geoJSON(null, {
 
   interactive: false,
-	pane: 'schutzgebietePane',
 
   style: function(feature) {
     return {
@@ -730,9 +735,8 @@ legend.onAdd = function(map) {
 // Legende immer anzeigen
 legend.addTo(map);
 
-let tueplGeladen = false;
-
 async function ladeTuepl() {
+
   try {
 
     const response = await fetch('tuepl.geojson');
@@ -749,10 +753,6 @@ async function ladeTuepl() {
 
     tueplLayer.addData(data);
 
-    tueplGeladen = true;
-
-    return true;
-
   } catch (error) {
 
     console.error(
@@ -765,13 +765,11 @@ async function ladeTuepl() {
       'Details stehen in der Browser-Konsole.'
     );
 
-    return false;
   }
+
 }
-
-const tueplPromise = ladeTuepl();
-
-
+ladeTuepl();
+	
 // =====================================================
 // Punkte per Mausklick setzen
 // =====================================================
@@ -1227,35 +1225,9 @@ gemeindegrenzen.addTo(map);
 labels.addTo(map);
 orthoLabelsArcGIS.addTo(map);
 
-// =====================================================
-// Flugbeschränkungen laden und anschließend anzeigen
-// =====================================================
-
-Promise.all([
-  schutzgebietePromise,
-  tueplPromise
-]).then(([schutzgebieteOK, tueplOK]) => {
-
-  console.log(
-    'Schutzgebiete geladen:',
-    schutzgebieteOK
-  );
-
-  console.log(
-    'TÜPL geladen:',
-    tueplOK
-  );
-
-  if (schutzgebieteOK) {
-    schutzgebieteLayer.addTo(map);
-  }
-
-  if (tueplOK) {
-    tueplLayer.addTo(map);
-  }
-
-});
-
+// --- Flugbeschränkungen immer anzeigen ---
+schutzgebieteLayer.addTo(map);
+tueplLayer.addTo(map);
 
 document.getElementById("layerSwitch").addEventListener('change', (e) => {
   const value = e.target.value;
@@ -1303,107 +1275,22 @@ function waitUntilMapIdle(map) {
     });
 }
 
-// =====================================================
-// Warten, bis die Karte und GeoJSON-Layer gerendert sind
-// =====================================================
-
-function waitForMapRendering(map) {
-  return new Promise(resolve => {
-
-    // Karte neu zeichnen
-    map.invalidateSize();
-
-    // Leaflet braucht mehrere Renderzyklen,
-    // bevor SVG/DOM-Elemente vollständig vorhanden sind.
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-
-          // Noch einen kleinen Puffer für Browser-Rendering
-          setTimeout(() => {
-            resolve();
-          }, 500);
-
-        });
-      });
-    });
-  });
-}
-
-	
 // --- PDF Export ---
 document.getElementById("exportPDF").onclick = async () => {
-
-  if (points.length < 2) {
-    return alert("Bitte zwei Punkte setzen.");
-  }
-
-  // =====================================================
-  // Warten, bis Schutzgebiete und TÜPL geladen sind
-  // =====================================================
-
-  const [schutzgebieteOK, tueplOK] = await Promise.all([
-    schutzgebietePromise,
-    tueplPromise
-  ]);
-
-  console.log(
-    'PDF-Export – Schutzgebiete:',
-    schutzgebieteOK
-  );
-
-  console.log(
-    'PDF-Export – TÜPL:',
-    tueplOK
-  );
-
-  if (!schutzgebieteOK || !tueplOK) {
-    alert(
-      'Die Flugbeschränkungen konnten nicht vollständig geladen werden. ' +
-      'Der PDF-Export wurde abgebrochen.'
-    );
-
-    return;
-  }
-
-
-  if (!tueplGeladen) {
-    await new Promise(resolve => {
-      const check = setInterval(() => {
-        if (tueplGeladen) {
-          clearInterval(check);
-          resolve();
-        }
-      }, 100);
-    });
-  }
-
-  const type =
-    document.querySelector('input[name="type"]:checked').value;
-
+  if (points.length < 2) return alert("Bitte zwei Punkte setzen.");
+  const type = document.querySelector('input[name="type"]:checked').value;
   const { jsPDF } = window.jspdf;
-
-  const pdf = new jsPDF({
-    orientation: isMobile ? "portrait" : "landscape",
-    unit: "mm",
-    format: "a4",
-    compress: true
-  });
+const pdf = new jsPDF({
+  orientation: isMobile ? "portrait" : "landscape",
+  unit: "mm",
+  format: "a4",
+  compress: true
+});
 
   const mapEl = document.getElementById("map");
-
   const originalHeight = mapEl.style.height;
   const originalView = map.getCenter();
   const originalZoom = map.getZoom();
-
-  // Sicherstellen, dass beide Layer auf der Karte liegen
-  if (!map.hasLayer(schutzgebieteLayer)) {
-    schutzgebieteLayer.addTo(map);
-  }
-
-  if (!map.hasLayer(tueplLayer)) {
-    tueplLayer.addTo(map);
-  }
 
   const allPoints = [...points];
 if (vetMarker) {
@@ -1435,25 +1322,22 @@ await new Promise(r => setTimeout(r, 2500));
     const controlsToHide = document.querySelectorAll('.leaflet-control-zoom, .leaflet-control-geocoder');
     controlsToHide.forEach(el => { if (el) el.style.display = 'none'; });
 
-// Flugbeschränkungen für PDF-Export sicherstellen
-if (!map.hasLayer(schutzgebieteLayer)) {
-    schutzgebieteLayer.addTo(map);
+// Flugbeschränkungen für PDF-Export nach vorne bringen
+if (map.hasLayer(schutzgebieteLayer)) {
+    schutzgebieteLayer.bringToFront();
 }
 
-if (!map.hasLayer(tueplLayer)) {
-    tueplLayer.addTo(map);
+if (map.hasLayer(tueplLayer)) {
+    tueplLayer.bringToFront();
 }
-
 
 	  
+    // Map als Canvas
 const canvas = await html2canvas(mapEl, {
   useCORS: true,
   allowTaint: true,
-  scale: 1,
-  backgroundColor: '#ffffff',
-  logging: false
+  scale: 1
 });
-
     controlsToHide.forEach(el => { if (el) el.style.display = ''; });
 
     let imgWidth = pdfWidth;
