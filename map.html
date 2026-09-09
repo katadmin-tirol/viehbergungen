@@ -291,15 +291,6 @@ Die aktuellen Anforderungsformulare für Viehbergungen finden Sie <a href="https
 <option value="ortho">Orthophoto</option>
   <option value="summer" selected>Basiskarte</option>
 </select>
-<label>
-    <input type="checkbox" id="schutzgebieteSwitch">
-    Nationalpark Hohe Tauern
-  </label>
-
-<label>
-  <input type="checkbox" id="tueplSwitch">
-  TÜPL
-</label>
 
 </div>
 	
@@ -673,27 +664,6 @@ async function ladeSchutzgebiete() {
 }
 
 
-// =====================================================
-// Checkbox Schutzgebiete
-// =====================================================
-
-document.getElementById('schutzgebieteSwitch')
-  .addEventListener('change', function() {
-
-    if (this.checked) {
-
-      schutzgebieteLayer.addTo(map);
-
-    } else {
-
-      map.removeLayer(schutzgebieteLayer);
-
-    }
-
-    updateLegend();
-
-  });
-
 
 
 // =====================================================
@@ -721,8 +691,9 @@ const tueplLayer = L.geoJSON(null, {
   }
 
 });
+
 // =====================================================
-// Kartenlegende
+// Kartenlegende – Flugbeschränkungen
 // =====================================================
 
 const legend = L.control({
@@ -734,23 +705,23 @@ legend.onAdd = function(map) {
   const div = L.DomUtil.create('div', 'map-legend');
 
   div.innerHTML = `
-    <div class="map-legend-title">Legende</div>
+    <div class="map-legend-title">Flugbeschränkungen</div>
 
-    <div class="legend-item legend-tuepl">
+    <div class="legend-item">
       <span class="legend-color"
             style="background:#FF7F50; border-color:#FF7F50;">
       </span>
-      Tüpl
+      TÜPL
     </div>
 
-    <div class="legend-item legend-np-aussen">
+    <div class="legend-item">
       <span class="legend-color"
             style="background:#0000FF; border-color:#0000FF;">
       </span>
       Nationalpark Hohe Tauern Außenzone
     </div>
 
-    <div class="legend-item legend-np-kern">
+    <div class="legend-item">
       <span class="legend-color"
             style="background:#8B008B; border-color:#8B008B;">
       </span>
@@ -760,62 +731,9 @@ legend.onAdd = function(map) {
 
   return div;
 };
-// =====================================================
-// Legende aktualisieren
-// =====================================================
 
-function updateLegend() {
-
-  const schutzgebieteAktiv =
-    document.getElementById('schutzgebieteSwitch').checked;
-
-  const tueplAktiv =
-    document.getElementById('tueplSwitch').checked;
-
-  // Falls kein Zusatzlayer aktiv ist:
-  // Legende entfernen
-  if (!schutzgebieteAktiv && !tueplAktiv) {
-
-    if (map.hasLayer(legend)) {
-      map.removeControl(legend);
-    }
-
-    return;
-  }
-
-  // Legende hinzufügen
-  if (!map.hasLayer(legend)) {
-    legend.addTo(map);
-  }
-
-  // Einzelne Einträge ein-/ausblenden
-  const legendElement = document.querySelector('.map-legend');
-
-  if (!legendElement) return;
-
-  const tueplItem =
-    legendElement.querySelector('.legend-tuepl');
-
-  const npAussenItem =
-    legendElement.querySelector('.legend-np-aussen');
-
-  const npKernItem =
-    legendElement.querySelector('.legend-np-kern');
-
-
-  // TÜPL
-  tueplItem.style.display =
-    tueplAktiv ? 'flex' : 'none';
-
-
-  // Nationalpark
-  npAussenItem.style.display =
-    schutzgebieteAktiv ? 'flex' : 'none';
-
-  npKernItem.style.display =
-    schutzgebieteAktiv ? 'flex' : 'none';
-}
-
+// Legende immer anzeigen
+legend.addTo(map);
 
 async function ladeTuepl() {
 
@@ -851,25 +769,6 @@ async function ladeTuepl() {
 
 }
 ladeTuepl();
-	
-document.getElementById('tueplSwitch')
-  .addEventListener('change', function() {
-
-    if (this.checked) {
-
-      tueplLayer.addTo(map);
-
-    } else {
-
-      map.removeLayer(tueplLayer);
-
-    }
-
-    updateLegend();
-
-  });
-
-
 	
 // =====================================================
 // Punkte per Mausklick setzen
@@ -1326,6 +1225,10 @@ gemeindegrenzen.addTo(map);
 labels.addTo(map);
 orthoLabelsArcGIS.addTo(map);
 
+// --- Flugbeschränkungen immer anzeigen ---
+schutzgebieteLayer.addTo(map);
+tueplLayer.addTo(map);
+
 document.getElementById("layerSwitch").addEventListener('change', (e) => {
   const value = e.target.value;
 
@@ -1419,18 +1322,15 @@ await new Promise(r => setTimeout(r, 2500));
     const controlsToHide = document.querySelectorAll('.leaflet-control-zoom, .leaflet-control-geocoder');
     controlsToHide.forEach(el => { if (el) el.style.display = 'none'; });
 
-// Zusatzlayer für PDF-Export in den Vordergrund bringen
-if (document.getElementById('schutzgebieteSwitch').checked) {
-    if (map.hasLayer(schutzgebieteLayer)) {
-        schutzgebieteLayer.bringToFront();
-    }
+// Flugbeschränkungen für PDF-Export nach vorne bringen
+if (map.hasLayer(schutzgebieteLayer)) {
+    schutzgebieteLayer.bringToFront();
 }
 
-if (document.getElementById('tueplSwitch').checked) {
-    if (map.hasLayer(tueplLayer)) {
-        tueplLayer.bringToFront();
-    }
+if (map.hasLayer(tueplLayer)) {
+    tueplLayer.bringToFront();
 }
+
 	  
     // Map als Canvas
 const canvas = await html2canvas(mapEl, {
