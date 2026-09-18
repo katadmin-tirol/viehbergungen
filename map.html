@@ -670,14 +670,15 @@ async function ladeSchutzgebiete() {
 // WFS beim Start einmal laden
 // =====================================================
 
-ladeSchutzgebiete();
+const schutzgebietePromise = ladeSchutzgebiete();
 
-// =====================================================
-// TÜPL – GeoJSON
-// =====================================================
+map.createPane('tueplPane');
+map.getPane('tueplPane').style.zIndex = 460; // über schutzgebietePane (450)
+map.getPane('tueplPane').style.pointerEvents = 'none';
 
 const tueplLayer = L.geoJSON(null, {
 
+  pane: 'tueplPane',
   interactive: false,
 
   style: function(feature) {
@@ -691,7 +692,6 @@ const tueplLayer = L.geoJSON(null, {
   }
 
 });
-
 // =====================================================
 // Kartenlegende – Flugbeschränkungen
 // =====================================================
@@ -768,7 +768,7 @@ async function ladeTuepl() {
   }
 
 }
-ladeTuepl();
+const tueplPromise = ladeTuepl();
 	
 // =====================================================
 // Punkte per Mausklick setzen
@@ -1312,6 +1312,12 @@ await new Promise(resolve => {
     map.once('moveend', resolve);
 });
 
+// sicherstellen, dass TÜPL und Schutzgebiete wirklich fertig geladen sind
+await Promise.all([tueplPromise, schutzgebietePromise]);
+
+// kurzer Frame-Tick, damit Leaflet die SVG-Pfade fertig gezeichnet hat
+await new Promise(r => requestAnimationFrame(r));
+
 await waitUntilMapIdle(map);
 
 // kleiner Sicherheitspuffer
@@ -1321,15 +1327,6 @@ await new Promise(r => setTimeout(r, 2500));
     // Zoom-/Geocoder-Steuerelemente ausblenden
     const controlsToHide = document.querySelectorAll('.leaflet-control-zoom, .leaflet-control-geocoder');
     controlsToHide.forEach(el => { if (el) el.style.display = 'none'; });
-
-// Flugbeschränkungen für PDF-Export nach vorne bringen
-if (map.hasLayer(schutzgebieteLayer)) {
-    schutzgebieteLayer.bringToFront();
-}
-
-if (map.hasLayer(tueplLayer)) {
-    tueplLayer.bringToFront();
-}
 
 	  
     // Map als Canvas
