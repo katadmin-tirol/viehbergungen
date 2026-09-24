@@ -485,6 +485,7 @@ const schutzgebieteLayer = L.geoJSON(null, {
  interactive: false,
 	
 	pane: 'schutzgebietePane',
+	renderer: L.canvas({ pane: 'schutzgebietePane' }),
 
   style: function(feature) {
 
@@ -683,6 +684,7 @@ map.getPane('tueplPane').style.pointerEvents = 'none';
 const tueplLayer = L.geoJSON(null, {
 
   pane: 'tueplPane',
+  renderer: L.canvas({ pane: 'tueplPane' }),
   interactive: false,
 
   style: function(feature) {
