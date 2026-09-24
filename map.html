@@ -95,9 +95,28 @@ html, body {
 }
 
 /* Tooltip-Farben */
+.leaflet-tooltip-aufnahmeort,
+.leaflet-tooltip-ablageort,
+.leaflet-tooltip-vet {
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+  opacity: 1 !important;
+  box-shadow: none !important;
+  border: 1px solid #999 !important;
+  border-radius: 3px !important;
+  padding: 3px 6px !important;
+}
+
 .leaflet-tooltip-aufnahmeort { color: blue; font-weight: bold; }
-.leaflet-tooltip-abladeort { color: red; font-weight: bold; }
+.leaflet-tooltip-ablageort { color: red; font-weight: bold; }
 .leaflet-tooltip-vet { color: green; font-weight: bold; }
+
+/* Pfeilspitze der Tooltips ebenfalls fix einfärben */
+.leaflet-tooltip-aufnahmeort::before,
+.leaflet-tooltip-ablageort::before,
+.leaflet-tooltip-vet::before {
+  border-top-color: #ffffff !important;
+}
 
 /* Mobile Optimierung */
 @media (max-width: 768px) {
