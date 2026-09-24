@@ -96,7 +96,7 @@ html, body {
 
 /* Tooltip-Farben */
 .leaflet-tooltip-aufnahmeort { color: blue; font-weight: bold; }
-.leaflet-tooltip-ablageort { color: red; font-weight: bold; }
+.leaflet-tooltip-abladeort { color: red; font-weight: bold; }
 .leaflet-tooltip-vet { color: green; font-weight: bold; }
 
 /* Mobile Optimierung */
@@ -278,7 +278,7 @@ Die aktuellen Anforderungsformulare für Viehbergungen finden Sie <a href="https
   <strong class="instruction-title">Anleitung:</strong><br>
   1. Navigieren Sie zum <strong>passenden Kartenausschnitt</strong>. Nutzen Sie ggf. die Suchleiste (Eingabe + Enter). Über die Auswahlbox können Sie die Hintergrundkarte bei Bedarf ändern.<br>
   2. Wählen Sie aus, ob es sich um eine <strong>Lebendvieh- oder Kadaverbergung</strong> handelt.<br>
-  3. Klicken Sie auf die Karte, um <strong>zuerst den</strong> <span class="highlight-blue">Aufnahmeort</span> und <strong>anschließend den</strong> <span class="highlight-red">Ablageort</span> zu markieren. Setzen Sie bei einer Lebendviehbergung zusätzlich den <span class="highlight-green">Aufnahmeort des Tierarztes/der Tierärztin</span>. Sie können die Punkte auch über die Koordinateneingabe im WGS84-Dezimalgrad-Format eingeben. Falls Sie falsche Punkte ausgewählt haben, klicken Sie auf "Zurücksetzen".<br>
+  3. Klicken Sie auf die Karte, um <strong>zuerst den</strong> <span class="highlight-blue">Aufnahmeort</span> und <strong>anschließend den</strong> <span class="highlight-red">Abladeort</span> zu markieren. Setzen Sie bei einer Lebendviehbergung zusätzlich den <span class="highlight-green">Aufnahmeort des Tierarztes/der Tierärztin</span>. Sie können die Punkte auch über die Koordinateneingabe im WGS84-Dezimalgrad-Format eingeben. Falls Sie falsche Punkte ausgewählt haben, klicken Sie auf "Zurücksetzen".<br>
   4. Klicken Sie auf <strong>"Als PDF exportieren"</strong>, um die Karte zu speichern.<br>
 </div>
 
@@ -319,7 +319,7 @@ Die aktuellen Anforderungsformulare für Viehbergungen finden Sie <a href="https
 
   <div class="coordinate-row">
     <label>
-      <span class="highlight-red">Ablageort:</span>
+      <span class="highlight-red">Abladeort:</span>
       <input type="number"
              id="ablageLat"
              step="0.00001"
@@ -331,7 +331,7 @@ Die aktuellen Anforderungsformulare für Viehbergungen finden Sie <a href="https
              placeholder="z. B. 11.40410">
 
       <button type="button" id="setAblage" class="button-red">
-  Ablageort setzen
+  Abladeort setzen
 </button>
 
     </label>
@@ -811,7 +811,7 @@ map.on('click', function(e) {
 
 
   // ---------------------------------------------------
-  // Ablageort
+  // Abladeort
   // ---------------------------------------------------
 
   if (!points[1]) {
@@ -822,12 +822,12 @@ map.on('click', function(e) {
     ).addTo(map);
 
     marker.bindTooltip(
-      "Ablageort",
+      "Abladeort",
       {
         permanent: true,
         direction: "top",
         offset: [0, -10],
-        className: "leaflet-tooltip-ablageort"
+        className: "leaflet-tooltip-abladeort"
       }
     ).openTooltip();
 
@@ -907,7 +907,7 @@ function updateCoords() {
   }
   if (points[1]) {
     text += `<img src="${redIconUrl}" width="15" height="25" style="vertical-align:middle;"> 
-             <strong>Ablageort:</strong> ${points[1].lat.toFixed(5)}, ${points[1].lng.toFixed(5)}<br>`;
+             <strong>Abladeort:</strong> ${points[1].lat.toFixed(5)}, ${points[1].lng.toFixed(5)}<br>`;
   }
   if (vetMarker) {
     const latlng = vetMarker.getLatLng();
@@ -1036,7 +1036,7 @@ document.getElementById("setAufnahme").onclick = () => {
 
 
 // =====================================================
-// Ablageort über Koordinaten setzen
+// Abladeort über Koordinaten setzen
 // =====================================================
 
 document.getElementById("setAblage").onclick = () => {
@@ -1053,7 +1053,7 @@ document.getElementById("setAblage").onclick = () => {
   if (!validCoordinate(lat, lng)) {
 
     alert(
-      "Bitte gültige WGS84-Koordinaten für den Ablageort eingeben.\n\n" +
+      "Bitte gültige WGS84-Koordinaten für den Abladeort eingeben.\n\n" +
       "Beispiel:\n" +
       "Breitengrad: 47.26500\n" +
       "Längengrad: 11.41000"
@@ -1066,7 +1066,7 @@ document.getElementById("setAblage").onclick = () => {
   const point = L.latLng(lat, lng);
 
 
-  // Alten Ablageort entfernen
+  // Alten Abladeort entfernen
   if (markers[1]) {
     map.removeLayer(markers[1]);
   }
@@ -1083,12 +1083,12 @@ document.getElementById("setAblage").onclick = () => {
   ).addTo(map);
 
   marker.bindTooltip(
-    "Ablageort",
+    "Abladeort",
     {
       permanent: true,
       direction: "top",
       offset: [0, -10],
-      className: "leaflet-tooltip-ablageort"
+      className: "leaflet-tooltip-abladeort"
     }
   ).openTooltip();
 
@@ -1439,10 +1439,10 @@ pdf.text(`${points[0].lat.toFixed(5)}, ${points[0].lng.toFixed(5)} WGS84-Decimal
 
 y += 8;
 
-// Ablageort
+// Abladeort
 pdf.setFont("helvetica", "bold");
 pdf.setTextColor(255, 0, 0); // Rot
-pdf.text("Ablageort:", 10, y);
+pdf.text("Abladeort:", 10, y);
 
 pdf.setFont("helvetica", "normal");
 pdf.setTextColor(0, 0, 0);
