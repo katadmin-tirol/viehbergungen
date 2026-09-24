@@ -377,8 +377,12 @@ Die aktuellen Anforderungsformulare für Viehbergungen finden Sie <a href="https
 const isMobile = window.innerWidth <= 768;
 if(!isMobile) document.body.classList.add('desktop');
 
+// html2canvas kann CSS-3D-Transforms (translate3d) nicht zuverlässig
+// erfassen – Leaflet zwingen, stattdessen top/left zu verwenden.
+L.Browser.any3d = false;
+
 // --- Karte initialisieren ---
-const map = L.map('map', { 
+const map = L.map('map', {
     zoomControl: true, 
     dragging: true, 
     tap: true, 
