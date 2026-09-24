@@ -1354,15 +1354,11 @@ await new Promise(r => setTimeout(r, 2500));
     controlsToHide.forEach(el => { if (el) el.style.display = 'none'; });
 
 	  
-    // Map als Canvas
 const canvas = await html2canvas(mapEl, {
   useCORS: true,
   allowTaint: true,
   scale: 1
 });
-
-// TEMPORÄR zum Debuggen – öffnet das rohe Screenshot-Bild in neuem Tab
-window.open(canvas.toDataURL());
     controlsToHide.forEach(el => { if (el) el.style.display = ''; });
 
     let imgWidth = pdfWidth;
