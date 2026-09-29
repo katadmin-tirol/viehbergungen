@@ -11,17 +11,23 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
 
 <style>
+/* =====================================================
+   GRUNDLAYOUT
+   ===================================================== */
 html, body {
   margin: 0;
   padding: 0;
   font-family: 'Arial', sans-serif;
 }
-  
+
+/* Farbige Hervorhebungen im Anleitungstext */
 .highlight-red { color: red; font-weight: bold; }
 .highlight-blue { color: blue; font-weight: bold; }
 .highlight-green { color: green; font-weight: bold; }
 
-	/* Farbige Buttons für die einzelnen Punkte */
+/* =====================================================
+   BUTTONS FÜR DIE KOORDINATENEINGABE
+   ===================================================== */
 .button-blue {
   background-color: #e6f0ff;
   color: blue;
@@ -46,7 +52,7 @@ html, body {
   border-radius: 4px;
 }
 
-/* Etwas dunkler beim Darüberfahren */
+/* Hover-Zustände etwas dunkler */
 .button-blue:hover {
   background-color: #cce0ff;
 }
@@ -59,7 +65,9 @@ html, body {
   background-color: #cceacc;
 }
 
-
+/* =====================================================
+   KARTE & STEUERELEMENTE
+   ===================================================== */
 #map { height: 60vh; width: 100%; touch-action: none; }
 
 .controls {
@@ -77,6 +85,7 @@ html, body {
 
 #coords { margin: 10px; font-size: 1em; }
 
+/* Anleitungsbox oberhalb der Karte */
 #instruction { 
   background-color:#f0f0f0; 
   padding:10px; 
@@ -91,7 +100,12 @@ html, body {
   margin-bottom: 5px;
 }
 
-/* Tooltip-Farben */
+/* =====================================================
+   TOOLTIP-FARBEN (Marker-Beschriftungen)
+   Werden zusätzlich mit !important abgesichert, damit
+   externe Leaflet-CSS und html2canvas beim PDF-Export
+   nicht dazwischenfunken.
+   ===================================================== */
 .leaflet-tooltip-aufnahmeort,
 .leaflet-tooltip-abladeort,
 .leaflet-tooltip-vet {
@@ -124,6 +138,9 @@ html, body {
   border-top-color: #ffffff !important;
 }
 
+/* =====================================================
+   RESPONSIVE ANPASSUNGEN
+   ===================================================== */
 /* Mobile Optimierung */
 @media (max-width: 768px) {
   #map { height: 45vh; }
@@ -136,6 +153,9 @@ body.desktop .controls button,
 body.desktop .controls label, 
 body.desktop .layer-switch { font-size: 1em; padding: 6px 10px; }
 
+/* =====================================================
+   HEADER & FOOTER
+   ===================================================== */
 .header {
   display: flex;
   justify-content: space-between;
@@ -175,6 +195,7 @@ body.desktop .layer-switch { font-size: 1em; padding: 6px 10px; }
   text-decoration: underline;
 }
 
+/* Header-Anpassung für sehr schmale Bildschirme */
 @media (max-width: 600px) {
   .header {
     flex-direction: column;
@@ -191,6 +212,10 @@ body.desktop .layer-switch { font-size: 1em; padding: 6px 10px; }
     height: 40px;
   }
 }
+
+/* =====================================================
+   KOORDINATENEINGABE-BEREICH
+   ===================================================== */
 .coordinate-input {
   margin: 10px;
   padding: 12px;
@@ -236,6 +261,7 @@ body.desktop .layer-switch { font-size: 1em; padding: 6px 10px; }
   color: #555;
 }
 
+/* Koordinateneingabe auf Mobilgeräten untereinander anordnen */
 @media (max-width: 768px) {
 
   .coordinate-row label {
@@ -249,10 +275,9 @@ body.desktop .layer-switch { font-size: 1em; padding: 6px 10px; }
   }
 }
 
-	/* =====================================================
-   LEGENDE AUF DER KARTE
+/* =====================================================
+   KARTENLEGENDE (Flugbeschränkungen)
    ===================================================== */
-
 .map-legend {
   background: rgba(255, 255, 255, 0.95);
   padding: 10px 12px;
@@ -285,6 +310,9 @@ body.desktop .layer-switch { font-size: 1em; padding: 6px 10px; }
 </head>
 <body>
 
+<!-- =====================================================
+     HEADER MIT LOGOS
+     ===================================================== -->
 <div class="header">
   <img src="landeslogo.png" alt="Land Tirol">
 
@@ -295,6 +323,9 @@ body.desktop .layer-switch { font-size: 1em; padding: 6px 10px; }
   <img src="zivilschutzlogo.png" alt="Zivilschutz">
 </div>
 
+<!-- =====================================================
+     ANLEITUNGSTEXT
+     ===================================================== -->
 <div id="instruction">
 <p>Für die Anforderung von Kadaver- oder Lebendviehbergungen ist es erforderlich eine genaue Lagekarte der zu bergenden Tiere zu übermitteln.<br>
 Mit Hilfe dieses Erfassungssystems kann eine Übersichtskarte im pdf-Format erstellt und dem Anforderungsformular beigefügt werden.<br>
@@ -307,6 +338,9 @@ Die aktuellen Anforderungsformulare für Viehbergungen finden Sie <a href="https
   4. Klicken Sie auf <strong>"Als PDF exportieren"</strong>, um die Karte zu speichern.<br>
 </div>
 
+<!-- =====================================================
+     STEUERELEMENTE (Bergungsart, Reset, Export, Hintergrundkarte)
+     ===================================================== -->
 <div class="controls">
   <label><input type="radio" name="type" value="Lebendvieh" checked> Lebendviehbergung</label>
   <label><input type="radio" name="type" value="Kadaver"> Kadaverbergung</label>
@@ -318,7 +352,10 @@ Die aktuellen Anforderungsformulare für Viehbergungen finden Sie <a href="https
 </select>
 
 </div>
-	
+
+<!-- =====================================================
+     MANUELLE KOORDINATENEINGABE (Alternative zum Klicken)
+     ===================================================== -->
 <div class="coordinate-input">
   <strong>Punkte über Koordinaten setzen (WGS84 – Dezimalgrad)</strong>
 
@@ -387,10 +424,13 @@ Die aktuellen Anforderungsformulare für Viehbergungen finden Sie <a href="https
   </small>
 </div>
 
+<!-- =====================================================
+     KARTE
+     ===================================================== -->
 <div id="map"></div>
 <p id="coords"></p>
 
-<!-- Skripte -->
+<!-- Externe Bibliotheken -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/esri-leaflet/dist/esri-leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
@@ -398,7 +438,9 @@ Die aktuellen Anforderungsformulare für Viehbergungen finden Sie <a href="https
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <script>
-// --- Geräteerkennung ---
+// =====================================================
+// GERÄTEERKENNUNG
+// =====================================================
 const isMobile = window.innerWidth <= 768;
 if(!isMobile) document.body.classList.add('desktop');
 
@@ -406,7 +448,9 @@ if(!isMobile) document.body.classList.add('desktop');
 // erfassen – Leaflet zwingen, stattdessen top/left zu verwenden.
 L.Browser.any3d = false;
 
-// --- Karte initialisieren ---
+// =====================================================
+// KARTE INITIALISIEREN
+// =====================================================
 const map = L.map('map', {
     zoomControl: true, 
     dragging: true, 
@@ -415,7 +459,7 @@ const map = L.map('map', {
     doubleClickZoom: false 
 });
 
-// Tirol-Gesamt-Bounding-Box
+// Tirol-Gesamt-Bounding-Box als Startansicht
 const tirolBounds = L.latLngBounds(
     [46.64, 10.09],
     [47.74, 12.77]
@@ -425,8 +469,9 @@ map.fitBounds(tirolBounds, { padding: [20, 20]});
 map.setZoom(map.getZoom() + 1); // +1 = näher reinzoomen
 
 
-
-// --- Marker-Icons ---
+// =====================================================
+// MARKER-ICONS
+// =====================================================
 const blueIcon = new L.Icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png',
     shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
@@ -438,12 +483,14 @@ const redIcon = new L.Icon({
     iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
 });
 
-// --- Marker & Punkte ---
+// Zustand: gesetzte Punkte & zugehörige Marker
 let points = [], markers = [];
 let vetMarker = null; // Marker für Tierarzt/Tierärztin
 
 
-// --- WMTS-Layer Tirol ---
+// =====================================================
+// WMTS-HINTERGRUNDKARTEN TIROL
+// =====================================================
 const summer = L.tileLayer('https://wmts.kartetirol.at/gdi_base_summer/{z}/{x}/{y}.png', {
   tileSize: 256,
   minZoom: 0,
@@ -458,16 +505,18 @@ const ortho = L.tileLayer('https://wmts.kartetirol.at/gdi_ortho/{z}/{x}/{y}.png'
   attribution: '© Land Tirol',
   crossOrigin: true
 });
-	
-// --- Gemeindegrenzen Tirol ---
+
+// Gemeindegrenzen Tirol (ArcGIS)
 const gemeindegrenzen = L.esri.dynamicMapLayer({
   url: "https://gis.tirol.gv.at/arcgis/rest/services/Service_Public/ogd_basis/MapServer",
   layers: [45],
   opacity: 1
 });
-	
 
-// --- Label-Layer immer unter Marker ---
+
+// =====================================================
+// LABEL-LAYER (immer unter den Markern, über der Basiskarte)
+// =====================================================
 map.createPane('labelPane');
 map.getPane('labelPane').style.zIndex = 400; // unter MarkerPane (500)
 map.getPane('labelPane').style.pointerEvents = 'none';
@@ -481,30 +530,32 @@ const labels = L.tileLayer('https://wmts.kartetirol.at/gdi_nomenklatur/{z}/{x}/{
   crossOrigin: true
 });
 
-// --- ArcGIS Zusatzlayer ---
+// Zusätzliche Beschriftungen (Gipfelnamen etc.) aus ArcGIS
 const orthoLabelsArcGIS = L.esri.dynamicMapLayer({
   url: 'https://gis.tirol.gv.at/arcgis/rest/services/Basis/basis_ortho_label/MapServer',
 layers: [0,1,2,3,22,23,24,25,26,27],  
 pane: 'labelPane',
   opacity: 1
 });
+
+
 // =====================================================
-// SCHUTZGEBIETE – WFS
-// Nur Objekt NPKZ und NPAZ
+// SCHUTZGEBIETE – WFS (Nationalpark, nur NPKZ und NPAZ)
 // =====================================================
 
-// Eigener Layer-Pane für die Schutzgebiete
+// Eigener Pane für die Schutzgebiete, über den Labels,
+// damit die Stapelreihenfolge im PDF-Export garantiert stimmt.
 map.createPane('schutzgebietePane');
 map.getPane('schutzgebietePane').style.zIndex = 450;
 map.getPane('schutzgebietePane').style.pointerEvents = 'none';
 
-
-// WFS-Adresse
+// WFS-Adresse für die Schutzgebiete
 const schutzgebieteUrl =
   'https://dservices3.arcgis.com/hG7UfxX49PQ8XkXh/arcgis/services/Schutzgebiete_Umwelt/WFSServer';
 
-
-// Leerer Leaflet-Layer
+// Leerer Leaflet-Layer, wird per ladeSchutzgebiete() befüllt.
+// renderer: L.canvas sorgt dafür, dass html2canvas den Layer beim
+// PDF-Export zuverlässig und lagerichtig erfassen kann.
 const schutzgebieteLayer = L.geoJSON(null, {
 
  interactive: false,
@@ -540,7 +591,7 @@ const schutzgebieteLayer = L.geoJSON(null, {
       };
     }
 
-    // Fallback
+    // Fallback für unbekannte Objektarten
     return {
       color: '#666666',
       weight: 2,
@@ -550,6 +601,7 @@ const schutzgebieteLayer = L.geoJSON(null, {
     };
   },
 
+  // Popup-Text je nach Objektart
   onEachFeature: function(feature, layer) {
 
     if (!feature.properties) return;
@@ -581,11 +633,9 @@ const schutzgebieteLayer = L.geoJSON(null, {
 });
 
 
-
-// =====================================================
-// WFS-Daten laden
-// =====================================================
-
+// --- WFS-Daten laden ---
+// Lädt alle Schutzgebiete-Features und filtert anschließend
+// auf die relevanten Objektarten NPKZ/NPAZ.
 async function ladeSchutzgebiete() {
 
   const params = new URLSearchParams({
@@ -645,10 +695,7 @@ async function ladeSchutzgebiete() {
     );
 
 
-    // -------------------------------------------------
     // Nur NPKZ und NPAZ übernehmen
-    // -------------------------------------------------
-
     const gefilterteFeatures =
       data.features.filter(function(feature) {
 
@@ -670,7 +717,7 @@ async function ladeSchutzgebiete() {
     );
 
 
-    // Gefilterte Daten in Leaflet laden
+    // Gefilterte Daten in den Leaflet-Layer laden
     schutzgebieteLayer.addData({
       type: 'FeatureCollection',
       features: gefilterteFeatures
@@ -694,14 +741,18 @@ async function ladeSchutzgebiete() {
 }
 
 
-
-
-// =====================================================
-// WFS beim Start einmal laden
-// =====================================================
-
+// WFS-Daten beim Start einmal laden.
+// Promise wird gespeichert, damit der PDF-Export später
+// garantiert warten kann, bis die Daten vollständig da sind.
 const schutzgebietePromise = ladeSchutzgebiete();
 
+
+// =====================================================
+// TÜPL – GeoJSON (Truppenübungsplatz)
+// =====================================================
+
+// Eigener Pane, über schutzgebietePane, damit TÜPL im
+// PDF-Export immer sichtbar über den Nationalpark-Flächen liegt.
 map.createPane('tueplPane');
 map.getPane('tueplPane').style.zIndex = 460; // über schutzgebietePane (450)
 map.getPane('tueplPane').style.pointerEvents = 'none';
@@ -723,10 +774,11 @@ const tueplLayer = L.geoJSON(null, {
   }
 
 });
-// =====================================================
-// Kartenlegende – Flugbeschränkungen
-// =====================================================
 
+
+// =====================================================
+// KARTENLEGENDE – FLUGBESCHRÄNKUNGEN
+// =====================================================
 const legend = L.control({
   position: 'bottomright'
 });
@@ -766,6 +818,8 @@ legend.onAdd = function(map) {
 // Legende immer anzeigen
 legend.addTo(map);
 
+
+// --- TÜPL-GeoJSON laden ---
 async function ladeTuepl() {
 
   try {
@@ -799,22 +853,23 @@ async function ladeTuepl() {
   }
 
 }
-const tueplPromise = ladeTuepl();
-	
-// =====================================================
-// Punkte per Mausklick setzen
-// =====================================================
 
+// Promise wird gespeichert, damit der PDF-Export später
+// garantiert warten kann, bis die Daten vollständig da sind.
+const tueplPromise = ladeTuepl();
+
+
+// =====================================================
+// PUNKTE PER MAUSKLICK SETZEN
+// (Reihenfolge: Aufnahmeort -> Abladeort -> ggf. Tierarzt)
+// =====================================================
 map.on('click', function(e) {
 
   const type =
     document.querySelector('input[name="type"]:checked').value;
 
 
-  // ---------------------------------------------------
-  // Aufnahmeort
-  // ---------------------------------------------------
-
+  // --- Aufnahmeort ---
   if (!points[0]) {
 
     const marker = L.marker(
@@ -841,10 +896,7 @@ map.on('click', function(e) {
   }
 
 
-  // ---------------------------------------------------
-  // Abladeort
-  // ---------------------------------------------------
-
+  // --- Abladeort ---
   if (!points[1]) {
 
     const marker = L.marker(
@@ -871,10 +923,7 @@ map.on('click', function(e) {
   }
 
 
-  // ---------------------------------------------------
-  // Tierarzt/Tierärztin
-  // ---------------------------------------------------
-
+  // --- Tierarzt/Tierärztin (nur bei Lebendviehbergung) ---
   if (type === "Lebendvieh" && !vetMarker) {
 
     const greenIcon = new L.Icon({
@@ -911,10 +960,7 @@ map.on('click', function(e) {
   }
 
 
-  // ---------------------------------------------------
-  // Keine weiteren Punkte möglich
-  // ---------------------------------------------------
-
+  // --- Keine weiteren Punkte möglich ---
   const maxPoints =
     type === "Lebendvieh" ? 3 : 2;
 
@@ -926,6 +972,8 @@ map.on('click', function(e) {
 });
 
 
+// Aktualisiert die Textanzeige unterhalb der Karte mit
+// allen aktuell gesetzten Koordinaten.
 function updateCoords() {
   let text = "";
   const blueIconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png';
@@ -948,10 +996,11 @@ function updateCoords() {
 
   document.getElementById("coords").innerHTML = text;
 }
-// =====================================================
-// Tierarzt-Koordinaten bei Kadaverbergung ausblenden
-// =====================================================
 
+
+// =====================================================
+// TIERARZT-KOORDINATEN BEI KADAVERBERGUNG AUSBLENDEN
+// =====================================================
 function updateVetCoordinateVisibility() {
   const type = document.querySelector('input[name="type"]:checked').value;
   const vetRow = document.querySelector('.vet-coordinate-row');
@@ -974,8 +1023,7 @@ function updateVetCoordinateVisibility() {
   }
 }
 
-
-// Beim Wechsel zwischen Lebendvieh und Kadaver ausführen
+// Bei Wechsel zwischen Lebendvieh und Kadaver ausführen
 document.querySelectorAll('input[name="type"]').forEach(radio => {
   radio.addEventListener("change", updateVetCoordinateVisibility);
 });
@@ -983,10 +1031,12 @@ document.querySelectorAll('input[name="type"]').forEach(radio => {
 // Beim Start den richtigen Zustand herstellen
 updateVetCoordinateVisibility();
 
+
 // =====================================================
-// Punkte über WGS84-Koordinaten einzeln setzen
+// PUNKTE ÜBER WGS84-KOORDINATEN EINZELN SETZEN
 // =====================================================
 
+// Prüft, ob Lat/Lng-Werte gültige WGS84-Koordinaten sind
 function validCoordinate(lat, lng) {
   return (
     Number.isFinite(lat) &&
@@ -999,10 +1049,7 @@ function validCoordinate(lat, lng) {
 }
 
 
-// =====================================================
-// Aufnahmeort über Koordinaten setzen
-// =====================================================
-
+// --- Aufnahmeort über Koordinaten setzen ---
 document.getElementById("setAufnahme").onclick = () => {
 
   const lat = parseFloat(
@@ -1066,10 +1113,7 @@ document.getElementById("setAufnahme").onclick = () => {
 };
 
 
-// =====================================================
-// Abladeort über Koordinaten setzen
-// =====================================================
-
+// --- Abladeort über Koordinaten setzen ---
 document.getElementById("setAblage").onclick = () => {
 
   const lat = parseFloat(
@@ -1133,10 +1177,7 @@ document.getElementById("setAblage").onclick = () => {
 };
 
 
-// =====================================================
-// Tierarzt/Tierärztin über Koordinaten setzen
-// =====================================================
-
+// --- Tierarzt/Tierärztin über Koordinaten setzen ---
 document.getElementById("setVet").onclick = () => {
 
   const type =
@@ -1224,6 +1265,7 @@ document.getElementById("setVet").onclick = () => {
 };
 
 
+// --- Alle Punkte zurücksetzen ---
 document.getElementById("reset").onclick = () => {
 
   points = [];
@@ -1250,16 +1292,22 @@ document.getElementById("reset").onclick = () => {
 };
 
 
-// --- Standard: Basiskarte aktiv ---
+// =====================================================
+// STANDARD-LAYER AKTIVIEREN
+// =====================================================
 summer.addTo(map);
 gemeindegrenzen.addTo(map);
 labels.addTo(map);
 orthoLabelsArcGIS.addTo(map);
 
-// --- Flugbeschränkungen immer anzeigen ---
+// Flugbeschränkungen (TÜPL & Schutzgebiete) immer anzeigen
 schutzgebieteLayer.addTo(map);
 tueplLayer.addTo(map);
 
+
+// =====================================================
+// HINTERGRUNDKARTE WECHSELN (Basiskarte / Orthophoto)
+// =====================================================
 document.getElementById("layerSwitch").addEventListener('change', (e) => {
   const value = e.target.value;
 
@@ -1283,6 +1331,11 @@ document.getElementById("layerSwitch").addEventListener('change', (e) => {
   markers.forEach(m => m.addTo(map));
 });
 
+
+// =====================================================
+// HILFSFUNKTION: WARTET, BIS ALLE TILE-LAYER FERTIG GELADEN SIND
+// (wird vor dem PDF-Export aufgerufen)
+// =====================================================
 function waitUntilMapIdle(map) {
     return new Promise(resolve => {
 
@@ -1306,14 +1359,20 @@ function waitUntilMapIdle(map) {
     });
 }
 
-// --- PDF Export ---
+
+// =====================================================
+// PDF-EXPORT
+// =====================================================
 document.getElementById("exportPDF").onclick = async () => {
   if (points.length < 2) return alert("Bitte zwei Punkte setzen.");
 
+  // --- Export-Button während des Exports sperren ---
   const exportButton = document.getElementById("exportPDF");
   exportButton.disabled = true;
   exportButton.textContent = "Export läuft...";
 
+  // Sicherheits-Timeout: falls der Export unerwartet hängt,
+  // wird der Button nach 25s wieder freigegeben.
   const timeoutId = setTimeout(() => {
     alert("Der PDF-Export dauert ungewöhnlich lange und wurde abgebrochen. Bitte erneut versuchen.");
     exportButton.disabled = false;
@@ -1322,71 +1381,80 @@ document.getElementById("exportPDF").onclick = async () => {
 
   const type = document.querySelector('input[name="type"]:checked').value;
   const { jsPDF } = window.jspdf;
-const pdf = new jsPDF({
-  orientation: isMobile ? "portrait" : "landscape",
-  unit: "mm",
-  format: "a4",
-  compress: true
-});
+
+  // --- Neues PDF-Dokument anlegen ---
+  const pdf = new jsPDF({
+    orientation: isMobile ? "portrait" : "landscape",
+    unit: "mm",
+    format: "a4",
+    compress: true
+  });
 
   const mapEl = document.getElementById("map");
   const originalHeight = mapEl.style.height;
   const originalView = map.getCenter();
   const originalZoom = map.getZoom();
 
+  // Alle gesetzten Punkte (inkl. Tierarzt) für den Kartenausschnitt sammeln
   const allPoints = [...points];
-if (vetMarker) {
-  allPoints.push(vetMarker.getLatLng());
-}
+  if (vetMarker) {
+    allPoints.push(vetMarker.getLatLng());
+  }
 
-const bounds = L.latLngBounds(allPoints);
+  const bounds = L.latLngBounds(allPoints);
 
-const pdfWidth = pdf.internal.pageSize.getWidth() - 20;
-const pdfHeight = pdf.internal.pageSize.getHeight() - 50;
+  const pdfWidth = pdf.internal.pageSize.getWidth() - 20;
+  const pdfHeight = pdf.internal.pageSize.getHeight() - 50;
 
-  // Karte vergrößern für bessere Qualität
-mapEl.style.height = (isMobile ? pdfHeight * window.devicePixelRatio : pdfHeight * 3) + "px";
-map.invalidateSize();
+  // --- Karte für den Screenshot vorübergehend vergrößern (bessere Qualität) ---
+  mapEl.style.height = (isMobile ? pdfHeight * window.devicePixelRatio : pdfHeight * 3) + "px";
+  map.invalidateSize();
 
-map.fitBounds(bounds, { padding: [80, 80] });
+  map.fitBounds(bounds, { padding: [80, 80] });
 
-await new Promise(resolve => {
-    let erledigt = false;
+  // Warten, bis die Kartenbewegung abgeschlossen ist.
+  // Falls sich die Ansicht kaum/nicht ändert, feuert Leaflet
+  // kein 'moveend' – nach 1s trotzdem weitermachen.
+  await new Promise(resolve => {
+      let erledigt = false;
 
-    const fertig = () => {
-        if (erledigt) return;
-        erledigt = true;
-        resolve();
-    };
+      const fertig = () => {
+          if (erledigt) return;
+          erledigt = true;
+          resolve();
+      };
 
-    map.once('moveend', fertig);
+      map.once('moveend', fertig);
+      setTimeout(fertig, 1000);
+  });
 
-    // Falls sich die Ansicht kaum/nicht ändert, feuert Leaflet
-    // kein 'moveend' – nach 1s trotzdem weitermachen.
-    setTimeout(fertig, 1000);
-});
+  // Sicherstellen, dass TÜPL und Schutzgebiete wirklich fertig geladen sind
+  await Promise.all([tueplPromise, schutzgebietePromise]);
 
-await Promise.all([tueplPromise, schutzgebietePromise]);
+  // Kurzer Frame-Tick, damit Leaflet die Canvas-Layer fertig gezeichnet hat
+  await new Promise(r => requestAnimationFrame(r));
 
-await new Promise(r => requestAnimationFrame(r));
+  // Warten, bis alle Tile-Layer fertig geladen sind
+  await waitUntilMapIdle(map);
 
-await waitUntilMapIdle(map);
-
-await new Promise(r => setTimeout(r, 600));
+  // Kleiner Sicherheitspuffer
+  await new Promise(r => setTimeout(r, 600));
 
   try {
-    // Zoom-/Geocoder-Steuerelemente ausblenden
+    // --- Zoom-/Geocoder-Steuerelemente für den Screenshot ausblenden ---
     const controlsToHide = document.querySelectorAll('.leaflet-control-zoom, .leaflet-control-geocoder');
     controlsToHide.forEach(el => { if (el) el.style.display = 'none'; });
 
-	  
-const canvas = await html2canvas(mapEl, {
-  useCORS: true,
-  allowTaint: true,
-  scale: 2
-});
+    // --- Karte als Canvas rendern ---
+    const canvas = await html2canvas(mapEl, {
+      useCORS: true,
+      allowTaint: true,
+      scale: 2
+    });
+
     controlsToHide.forEach(el => { if (el) el.style.display = ''; });
 
+    // Bildgröße an die verfügbare PDF-Fläche anpassen
     let imgWidth = pdfWidth;
     let imgHeight = (canvas.height / canvas.width) * imgWidth;
     if (imgHeight > pdfHeight - 40) { 
@@ -1394,143 +1462,147 @@ const canvas = await html2canvas(mapEl, {
       imgWidth *= scale; 
       imgHeight *= scale; 
     }
-	const headerHeight = 25;
+    const headerHeight = 25;
     const yStart = headerHeight + 5; // Startpunkt unter Logos
 
-function loadLogo(src) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error(`Logo konnte nicht geladen werden: ${src}`));
-    img.src = src;
-  });
-}
+    // --- Hilfsfunktion: Logo-Bild laden ---
+    function loadLogo(src) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error(`Logo konnte nicht geladen werden: ${src}`));
+        img.src = src;
+      });
+    }
 
-const landeslogo = await loadLogo("landeslogo.png");
-const zivilschutzlogo = await loadLogo("zivilschutzlogo.png");
+    const landeslogo = await loadLogo("landeslogo.png");
+    const zivilschutzlogo = await loadLogo("zivilschutzlogo.png");
 
-    // Logos ins PDF einfügen
-const pageWidth = pdf.internal.pageSize.getWidth();
-const margin = 10;
+    // --- Header mit Logos und Titel ins PDF einfügen ---
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const margin = 10;
+
+    // Hilfsfunktion: Logo-Größe proportional an vorgegebene Maximalgröße anpassen
+    function getLogoSize(img, maxW, maxH) {
+      const ratio = Math.min(maxW / img.width, maxH / img.height);
+      return {
+        width: img.width * ratio,
+        height: img.height * ratio
+      };
+    }
+
+    const maxLogoWidth = 30;
+    const maxLogoHeight = 18;
+
+    const leftLogo = getLogoSize(landeslogo, maxLogoWidth, maxLogoHeight);
+    const rightLogo = getLogoSize(zivilschutzlogo, maxLogoWidth, maxLogoHeight);
+
+    // Header-Hintergrund
+    pdf.setFillColor(240, 240, 240);
+    pdf.rect(0, 0, pageWidth, headerHeight, "F");
+
+    // Logos zentriert im Header platzieren
+    const leftY = (headerHeight - leftLogo.height) / 2;
+    const rightY = (headerHeight - rightLogo.height) / 2;
+
+    pdf.addImage(landeslogo, "PNG", margin, leftY, leftLogo.width, leftLogo.height);
+
+    pdf.addImage(
+      zivilschutzlogo,
+      "PNG",
+      pageWidth - rightLogo.width - margin,
+      rightY,
+      rightLogo.width,
+      rightLogo.height
+    );
+
+    // Titel im Header
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(16);
+
+    pdf.text(
+      `Kartenerstellung Viehbergungen: ${type}`,
+      pageWidth / 2,
+      headerHeight / 2 + 2,
+      { align: "center" }
+    );
+
+    // Trennlinie unter dem Header
+    pdf.setLineWidth(0.3);
+    pdf.line(0, headerHeight, pageWidth, headerHeight);
 
 
-// Logo-Größe berechnen
-function getLogoSize(img, maxW, maxH) {
-  const ratio = Math.min(maxW / img.width, maxH / img.height);
-  return {
-    width: img.width * ratio,
-    height: img.height * ratio
-  };
-}
-
-const maxLogoWidth = 30;
-const maxLogoHeight = 18;
-
-const leftLogo = getLogoSize(landeslogo, maxLogoWidth, maxLogoHeight);
-const rightLogo = getLogoSize(zivilschutzlogo, maxLogoWidth, maxLogoHeight);
-
-// Optional: Hintergrund
-pdf.setFillColor(240, 240, 240);
-pdf.rect(0, 0, pageWidth, headerHeight, "F");
-
-// Logos (zentriert im Header)
-const leftY = (headerHeight - leftLogo.height) / 2;
-const rightY = (headerHeight - rightLogo.height) / 2;
-
-pdf.addImage(landeslogo, "PNG", margin, leftY, leftLogo.width, leftLogo.height);
-
-pdf.addImage(
-  zivilschutzlogo,
-  "PNG",
-  pageWidth - rightLogo.width - margin,
-  rightY,
-  rightLogo.width,
-  rightLogo.height
-);
-
-// Titel
-pdf.setFont("helvetica", "bold");
-pdf.setFontSize(16);
-
-pdf.text(
-  `Kartenerstellung Viehbergungen: ${type}`,
-  pageWidth / 2,
-  headerHeight / 2 + 2,
-  { align: "center" }
-);
-
-// Linie unter Header
-pdf.setLineWidth(0.3);
-pdf.line(0, headerHeight, pageWidth, headerHeight);  
-
-  
-// Map ins PDF einfügen
-	const imgData = canvas.toDataURL("image/jpeg", 0.3);
+    // --- Kartenbild ins PDF einfügen ---
+    // JPEG-Qualität bewusst niedrig gehalten (0.3), damit die
+    // PDF-Dateigröße für Versand/Formulare handhabbar bleibt.
+    const imgData = canvas.toDataURL("image/jpeg", 0.3);
     pdf.addImage(imgData, "JPEG", 10, yStart, imgWidth, imgHeight);
 
 
-// Text unter der Karte
-const yText = yStart + imgHeight + 10;
+    // --- Koordinaten-Textblock unter der Karte ---
+    const yText = yStart + imgHeight + 10;
 
-// kleinere Schrift
-pdf.setFontSize(11);
+    pdf.setFontSize(11);
 
-let y = yText;
+    let y = yText;
 
-const valueX = 75;
+    const valueX = 75;
 
-// Aufnahmeort
-pdf.setFont("helvetica", "bold");
-pdf.setTextColor(0, 0, 255); // Blau
-pdf.text("Aufnahmeort:", 10, y);
+    // Aufnahmeort
+    pdf.setFont("helvetica", "bold");
+    pdf.setTextColor(0, 0, 255); // Blau
+    pdf.text("Aufnahmeort:", 10, y);
 
-pdf.setFont("helvetica", "normal");
-pdf.setTextColor(0, 0, 0);
-pdf.text(`${points[0].lat.toFixed(5)}, ${points[0].lng.toFixed(5)} WGS84-Decimal`, valueX, y);
+    pdf.setFont("helvetica", "normal");
+    pdf.setTextColor(0, 0, 0);
+    pdf.text(`${points[0].lat.toFixed(5)}, ${points[0].lng.toFixed(5)} WGS84-Decimal`, valueX, y);
 
-y += 8;
+    y += 8;
 
-// Abladeort
-pdf.setFont("helvetica", "bold");
-pdf.setTextColor(255, 0, 0); // Rot
-pdf.text("Abladeort:", 10, y);
+    // Abladeort
+    pdf.setFont("helvetica", "bold");
+    pdf.setTextColor(255, 0, 0); // Rot
+    pdf.text("Abladeort:", 10, y);
 
-pdf.setFont("helvetica", "normal");
-pdf.setTextColor(0, 0, 0);
-pdf.text(`${points[1].lat.toFixed(5)}, ${points[1].lng.toFixed(5)} WGS84-Decimal`, valueX, y);
+    pdf.setFont("helvetica", "normal");
+    pdf.setTextColor(0, 0, 0);
+    pdf.text(`${points[1].lat.toFixed(5)}, ${points[1].lng.toFixed(5)} WGS84-Decimal`, valueX, y);
 
-y += 8;
+    y += 8;
 
-// Tierarzt/Tierärztin (nur falls gesetzt)
-if (vetMarker) {
-  const vetPos = vetMarker.getLatLng();
+    // Tierarzt/Tierärztin (nur falls gesetzt)
+    if (vetMarker) {
+      const vetPos = vetMarker.getLatLng();
 
-  pdf.setFont("helvetica", "bold");
-  pdf.setTextColor(0, 128, 0);
-  pdf.text("Aufnahmeort Tierarzt/Tierärztin:", 10, y);
+      pdf.setFont("helvetica", "bold");
+      pdf.setTextColor(0, 128, 0);
+      pdf.text("Aufnahmeort Tierarzt/Tierärztin:", 10, y);
 
-  pdf.setFont("helvetica", "normal");
-  pdf.setTextColor(0,0,0);
-  pdf.text(`${vetPos.lat.toFixed(5)}, ${vetPos.lng.toFixed(5)} WGS84-Decimal`, valueX, y);
+      pdf.setFont("helvetica", "normal");
+      pdf.setTextColor(0,0,0);
+      pdf.text(`${vetPos.lat.toFixed(5)}, ${vetPos.lng.toFixed(5)} WGS84-Decimal`, valueX, y);
 
-  y += 8;
-}
+      y += 8;
+    }
 
-// Datum
-const now = new Date();
-pdf.setFont("helvetica", "bold");
-pdf.setTextColor(0, 0, 0);
-pdf.text("Datum:", 10, y);
+    // Datum
+    const now = new Date();
+    pdf.setFont("helvetica", "bold");
+    pdf.setTextColor(0, 0, 0);
+    pdf.text("Datum:", 10, y);
 
-pdf.setFont("helvetica", "normal");
-pdf.text(`${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, valueX, y);
+    pdf.setFont("helvetica", "normal");
+    pdf.text(`${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, valueX, y);
 
-pdf.setFont("helvetica", "normal");
+    // --- PDF speichern ---
+    pdf.setFont("helvetica", "normal");
     pdf.save(`viehbergung_tirol_${type}.pdf`);
+
   } catch (err) {
     console.error("Fehler beim PDF-Export:", err);
     alert("Fehler beim Erstellen des PDFs. Details siehe Konsole.");
   } finally {
+    // --- Aufräumen: Timeout löschen, Button und Kartenansicht zurücksetzen ---
     clearTimeout(timeoutId);
     exportButton.disabled = false;
     exportButton.textContent = "Als PDF exportieren";
@@ -1541,13 +1613,16 @@ pdf.setFont("helvetica", "normal");
 };
 
 
-
-// --- Ortssuche ---
+// =====================================================
+// ORTSSUCHE (Geocoder)
+// =====================================================
 const geocoder = L.Control.geocoder({defaultMarkGeocode:false, collapsed:false}).addTo(map);
 geocoder.on('markgeocode', e => map.setView(e.geocode.center, 14));
 </script>
 
-<!-- FOOTER -->
+<!-- =====================================================
+     FOOTER
+     ===================================================== -->
 <div class="footer">
   © 2026 Kartenerstellung Viehbergungen | Land Tirol / Abt. Krisen- und Gefahrenmanagement | <a href="impressum.html">Impressum</a>
 </div>
