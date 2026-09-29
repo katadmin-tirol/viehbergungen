@@ -1365,8 +1365,8 @@ await new Promise(resolve => {
     map.once('moveend', fertig);
 
     // Falls sich die Ansicht kaum/nicht ändert, feuert Leaflet
-    // kein 'moveend' – nach 2s trotzdem weitermachen.
-    setTimeout(fertig, 2000);
+    // kein 'moveend' – nach 1s trotzdem weitermachen.
+    setTimeout(fertig, 1000);
 });
 
 await Promise.all([tueplPromise, schutzgebietePromise]);
@@ -1383,13 +1383,11 @@ await new Promise(r => setTimeout(r, 600));
     controlsToHide.forEach(el => { if (el) el.style.display = 'none'; });
 
 	  
-console.time('5-html2canvas');
 const canvas = await html2canvas(mapEl, {
   useCORS: true,
   allowTaint: true,
   scale: 2
 });
-console.timeEnd('5-html2canvas');
     controlsToHide.forEach(el => { if (el) el.style.display = ''; });
 
     let imgWidth = pdfWidth;
