@@ -1351,7 +1351,6 @@ const pdfHeight = pdf.internal.pageSize.getHeight() - 50;
 mapEl.style.height = (isMobile ? pdfHeight * window.devicePixelRatio : pdfHeight * 3) + "px";
 map.invalidateSize();
 
-console.time('1-fitBounds+moveend');
 map.fitBounds(bounds, { padding: [80, 80] });
 
 await new Promise(resolve => {
@@ -1369,21 +1368,14 @@ await new Promise(resolve => {
     // kein 'moveend' – nach 2s trotzdem weitermachen.
     setTimeout(fertig, 2000);
 });
-console.timeEnd('1-fitBounds+moveend');
 
-console.time('2-datenPromises');
 await Promise.all([tueplPromise, schutzgebietePromise]);
-console.timeEnd('2-datenPromises');
 
 await new Promise(r => requestAnimationFrame(r));
 
-console.time('3-waitUntilMapIdle');
 await waitUntilMapIdle(map);
-console.timeEnd('3-waitUntilMapIdle');
 
-console.time('4-sicherheitspuffer');
 await new Promise(r => setTimeout(r, 600));
-console.timeEnd('4-sicherheitspuffer');
 
   try {
     // Zoom-/Geocoder-Steuerelemente ausblenden
