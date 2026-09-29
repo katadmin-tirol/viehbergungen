@@ -1337,7 +1337,7 @@ const pdfWidth = pdf.internal.pageSize.getWidth() - 20;
 const pdfHeight = pdf.internal.pageSize.getHeight() - 50;
 
   // Karte vergrößern für bessere Qualität
-mapEl.style.height = (isMobile ? pdfHeight * window.devicePixelRatio : pdfHeight * 5) + "px";
+mapEl.style.height = (isMobile ? pdfHeight * window.devicePixelRatio : pdfHeight * 3) + "px";
 map.invalidateSize();
 
 map.fitBounds(bounds, { padding: [80, 80] });
@@ -1355,7 +1355,7 @@ await new Promise(r => requestAnimationFrame(r));
 await waitUntilMapIdle(map);
 
 // kleiner Sicherheitspuffer
-await new Promise(r => setTimeout(r, 2500));
+await new Promise(r => setTimeout(r, 1000));
 
   try {
     // Zoom-/Geocoder-Steuerelemente ausblenden
