@@ -1312,6 +1312,17 @@ function waitUntilMapIdle(map) {
 // --- PDF Export ---
 document.getElementById("exportPDF").onclick = async () => {
   if (points.length < 2) return alert("Bitte zwei Punkte setzen.");
+
+  const exportButton = document.getElementById("exportPDF");
+  exportButton.disabled = true;
+  exportButton.textContent = "Export läuft...";
+
+  const timeoutId = setTimeout(() => {
+    alert("Der PDF-Export dauert ungewöhnlich lange und wurde abgebrochen. Bitte erneut versuchen.");
+    exportButton.disabled = false;
+    exportButton.textContent = "Als PDF exportieren";
+  }, 25000);
+
   const type = document.querySelector('input[name="type"]:checked').value;
   const { jsPDF } = window.jspdf;
 const pdf = new jsPDF({
@@ -1381,9 +1392,10 @@ const canvas = await html2canvas(mapEl, {
     const yStart = headerHeight + 5; // Startpunkt unter Logos
 
 function loadLogo(src) {
-  return new Promise(resolve => {
+  return new Promise((resolve, reject) => {
     const img = new Image();
-    img.onload = () => resolve(img);  // nur Image-Objekt zurückgeben
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error(`Logo konnte nicht geladen werden: ${src}`));
     img.src = src;
   });
 }
@@ -1513,6 +1525,9 @@ pdf.setFont("helvetica", "normal");
     console.error("Fehler beim PDF-Export:", err);
     alert("Fehler beim Erstellen des PDFs. Details siehe Konsole.");
   } finally {
+    clearTimeout(timeoutId);
+    exportButton.disabled = false;
+    exportButton.textContent = "Als PDF exportieren";
     mapEl.style.height = originalHeight;
     map.invalidateSize();
     map.setView(originalView, originalZoom);
