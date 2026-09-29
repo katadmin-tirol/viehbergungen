@@ -1351,22 +1351,27 @@ const pdfHeight = pdf.internal.pageSize.getHeight() - 50;
 mapEl.style.height = (isMobile ? pdfHeight * window.devicePixelRatio : pdfHeight * 3) + "px";
 map.invalidateSize();
 
+console.time('1-fitBounds+moveend');
 map.fitBounds(bounds, { padding: [80, 80] });
 
 await new Promise(resolve => {
     map.once('moveend', resolve);
 });
+console.timeEnd('1-fitBounds+moveend');
 
-// sicherstellen, dass TÜPL und Schutzgebiete wirklich fertig geladen sind
+console.time('2-datenPromises');
 await Promise.all([tueplPromise, schutzgebietePromise]);
+console.timeEnd('2-datenPromises');
 
-// kurzer Frame-Tick, damit Leaflet die SVG-Pfade fertig gezeichnet hat
 await new Promise(r => requestAnimationFrame(r));
 
+console.time('3-waitUntilMapIdle');
 await waitUntilMapIdle(map);
+console.timeEnd('3-waitUntilMapIdle');
 
-// kleiner Sicherheitspuffer
-await new Promise(r => setTimeout(r, 1000));
+console.time('4-sicherheitspuffer');
+await new Promise(r => setTimeout(r, 600));
+console.timeEnd('4-sicherheitspuffer');
 
   try {
     // Zoom-/Geocoder-Steuerelemente ausblenden
@@ -1374,11 +1379,13 @@ await new Promise(r => setTimeout(r, 1000));
     controlsToHide.forEach(el => { if (el) el.style.display = 'none'; });
 
 	  
+console.time('5-html2canvas');
 const canvas = await html2canvas(mapEl, {
   useCORS: true,
   allowTaint: true,
-  scale: 1
+  scale: 2
 });
+console.timeEnd('5-html2canvas');
     controlsToHide.forEach(el => { if (el) el.style.display = ''; });
 
     let imgWidth = pdfWidth;
