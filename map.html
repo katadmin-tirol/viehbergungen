@@ -1355,7 +1355,19 @@ console.time('1-fitBounds+moveend');
 map.fitBounds(bounds, { padding: [80, 80] });
 
 await new Promise(resolve => {
-    map.once('moveend', resolve);
+    let erledigt = false;
+
+    const fertig = () => {
+        if (erledigt) return;
+        erledigt = true;
+        resolve();
+    };
+
+    map.once('moveend', fertig);
+
+    // Falls sich die Ansicht kaum/nicht ändert, feuert Leaflet
+    // kein 'moveend' – nach 2s trotzdem weitermachen.
+    setTimeout(fertig, 2000);
 });
 console.timeEnd('1-fitBounds+moveend');
 
